@@ -1,0 +1,137 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerified() {
+      return isSignedIn();
+    }
+
+    function isAdmin() {
+      return isVerified() && 
+             (request.auth.token.email == 'wilxon.xtha@gmail.com' ||
+              (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+               get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin'));
+    }
+
+    function isOwner(userId) {
+      return isVerified() && request.auth.uid == userId;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128;
+    }
+
+    // --- Users ---
+    function isValidUser(data) {
+      return data.uid is string && data.uid == request.auth.uid &&
+             data.email is string && data.email.size() > 0 &&
+             data.role in ['Admin', 'User'] &&
+             data.balance is number &&
+             data.username is string && data.username.size() > 0 &&
+             (data.get('mobileNumber', '') is string);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming()) && 
+                      (
+                        (incoming().role == 'User' && incoming().balance == 0) ||
+                        (incoming().email == 'wilxon.xtha@gmail.com' && incoming().role == 'Admin' && incoming().balance == 999999)
+                      );
+      allow update: if isAdmin() || (isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['username', 'mobileNumber', 'balance']) && incoming().balance <= existing().balance);
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // --- Boost Requests ---
+    match /requests/{requestId} {
+      // Combined list/read/create logic for robust owner/admin access
+      allow read, list: if isVerified() && (isAdmin() || (resource != null && resource.data.userId == request.auth.uid));
+      
+      allow create: if isVerified() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.status == 'Pending';
+
+      allow update: if (isAdmin() && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'usedBudget', 'allocatedBudget', 'remarks', 'isArchived'])) ||
+                      (isOwner(existing().userId) && incoming().diff(existing()).affectedKeys().hasOnly(['isArchived']));
+
+      allow delete: if isAdmin() || (isOwner(existing().userId) && existing().status == 'Pending');
+    }
+
+    // --- Balance Requests ---
+    match /balanceRequests/{requestId} {
+      allow read, list: if isVerified() && (isAdmin() || (resource != null && resource.data.userId == request.auth.uid));
+      
+      allow create: if isVerified() && 
+                      request.resource.data.userId == request.auth.uid &&
+                      request.resource.data.status == 'Pending' &&
+                      request.resource.data.amount >= 500;
+
+      allow update: if isAdmin() && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+    }
+
+    // --- Archived Requests ---
+    match /requests_archive/{archiveId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // --- Promo Codes ---
+    match /promoCodes/{promoCodeId} {
+      allow read: if isVerified();
+      allow write: if isAdmin();
+    }
+
+    // --- Settings ---
+    match /settings/{settingId} {
+      allow read: if isVerified();
+      allow write: if isAdmin();
+    }
+
+    // --- Chat ---
+    function isValidChat(data) {
+      return data.userId is string &&
+             (data.get('username', '') is string) &&
+             (data.get('lastMessage', '') is string) &&
+             (data.get('unreadCount', 0) is number);
+    }
+
+    function isValidMessage(data) {
+      return data.senderId == request.auth.uid &&
+             (data.get('senderName', '') is string) &&
+             data.content is string && 
+             data.status in ['sent', 'read', 'delivered'];
+    }
+
+    match /chats/{userId} {
+      allow read: if isAdmin() || isOwner(userId);
+      allow create: if (isAdmin() || isOwner(userId)) && isValidChat(incoming());
+      
+      allow update: if (isAdmin() || isOwner(userId));
+
+      match /messages/{messageId} {
+        allow read: if isAdmin() || isOwner(userId);
+        allow create: if (isAdmin() || isOwner(userId)) && isValidMessage(incoming());
+        allow update: if (isAdmin() || isOwner(userId));
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "System user profile",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["Admin", "User"] },
+        "balance": { "type": "number" },
+        "username": { "type": "string" },
+        "mobileNumber": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role", "balance"]
+    },
+    "BoostRequest": {
+      "title": "Boost Request",
+      "description": "Ad campaign boost request",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "url": { "type": "string" },
+        "platforms": { "type": "array", "items": { "type": "string" } },
+        "location": { "type": "string" },
+        "gender": { "type": "string" },
+        "age": { "type": "string" },
+        "adGoal": { "type": "string" },
+        "destination": { "type": "string" },
+        "allocatedBudget": { "type": "number" },
+        "duration": { "type": "number" },
+        "amountNpr": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pending", "Approved", "Rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "BalanceRequest": {
+      "title": "Balance Request",
+      "description": "Request to add funds to account",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "username": { "type": "string" },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["Pending", "Approved", "Rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Settings": {
+      "title": "Global Settings",
+      "description": "App configuration",
+      "type": "object",
+      "properties": {
+        "value": { "type": "number", "description": "Exchange rate" },
+        "whatsappNumber": { "type": "string" },
+        "pageRoleInfo": { "type": "string" },
+        "allowedPlatforms": { "type": "array", "items": { "type": "string" } },
+        "adminAlertMessage": { "type": "string" },
+        "invoiceConfig": { "type": "object" }
+      }
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "requests/{requestId}": {
+      "schema": "BoostRequest",
+      "description": "User boost campaign requests"
+    },
+    "balanceRequests/{requestId}": {
+      "schema": "BalanceRequest",
+      "description": "Balance load requests"
+    },
+    "settings/{settingId}": {
+      "schema": "Settings",
+      "description": "Global configuration documents"
+    }
+  }
+}
