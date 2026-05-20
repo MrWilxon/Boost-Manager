@@ -91,8 +91,11 @@ CREATE TABLE IF NOT EXISTS public.balance_requests (
 -- Enable RLS for Balance Requests
 ALTER TABLE public.balance_requests ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view and manage their own balance requests" ON public.balance_requests
-    FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "Users can select their own balance requests" ON public.balance_requests
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own balance requests" ON public.balance_requests
+    FOR INSERT WITH CHECK (auth.uid() = user_id AND status = 'Pending');
 
 CREATE POLICY "Admins can manage all balance requests" ON public.balance_requests
     FOR ALL USING (
@@ -193,6 +196,161 @@ BEGIN
     WHERE id = user_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 8. SECURE TRIGGER-BASED BALANCE DEDUCTION & VALIDATION
+-- Triggers before inserting a boost request: checks balance, then deducts it
+CREATE OR REPLACE FUNCTION public.handle_boost_request_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+    current_balance NUMERIC;
+BEGIN
+    SELECT balance INTO current_balance FROM public.profiles WHERE id = new.user_id;
+    IF current_balance IS NULL OR current_balance < new.amount_npr THEN
+        RAISE EXCEPTION 'Insufficient balance. You need रू% but only have रू%.', new.amount_npr, coalesce(current_balance, 0);
+    END IF;
+    
+    UPDATE public.profiles
+    SET balance = balance - new.amount_npr
+    WHERE id = new.user_id;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_boost_request_created
+    BEFORE INSERT ON public.boost_requests
+    FOR EACH ROW EXECUTE FUNCTION public.handle_boost_request_insert();
+
+-- 9. AUTOMATIC REFUND ON DELETING PENDING CAMPAIGNS
+-- Triggers before deleting a boost request: refunds user if request is Pending
+CREATE OR REPLACE FUNCTION public.handle_boost_request_delete()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF old.status = 'Pending' THEN
+        UPDATE public.profiles
+        SET balance = balance + old.amount_npr
+        WHERE id = old.user_id;
+        
+        INSERT INTO public.audit_logs (action, performed_by, target_request_id, details)
+        VALUES ('delete_request_refund', old.user_id, old.id, jsonb_build_object('refundAmount', old.amount_npr));
+    END IF;
+    RETURN OLD;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_boost_request_deleted
+    BEFORE DELETE ON public.boost_requests
+    FOR EACH ROW EXECUTE FUNCTION public.handle_boost_request_delete();
+
+-- 10. SECURE CAMPAIGN EDIT & BUDGET ADJUSTMENT VALIDATOR
+-- Triggers before updating a boost request: blocks status editing by user,
+-- adjusts profile balance dynamically for budget modifications, and blocks
+-- editing if status is not Pending.
+CREATE OR REPLACE FUNCTION public.handle_boost_request_before_update()
+RETURNS TRIGGER AS $$
+DECLARE
+    current_balance NUMERIC;
+    balance_diff NUMERIC;
+BEGIN
+    -- Prevent non-admins from changing status or editing non-pending campaigns
+    IF (SELECT role FROM public.profiles WHERE id = auth.uid()) != 'Admin' THEN
+        IF old.status != new.status THEN
+            RAISE EXCEPTION 'You are not authorized to change the status of this campaign.';
+        END IF;
+        
+        IF old.status != 'Pending' THEN
+            RAISE EXCEPTION 'You can only edit campaigns that are still Pending.';
+        END IF;
+    END IF;
+
+    -- Adjust balance automatically if amount_npr (budget) is modified
+    IF old.amount_npr != new.amount_npr THEN
+        balance_diff := new.amount_npr - old.amount_npr;
+        
+        SELECT balance INTO current_balance FROM public.profiles WHERE id = old.user_id;
+        IF balance_diff > 0 AND current_balance < balance_diff THEN
+            RAISE EXCEPTION 'Insufficient balance. You need an additional रू% but only have रू%.', balance_diff, current_balance;
+        END IF;
+
+        UPDATE public.profiles
+        SET balance = balance - balance_diff
+        WHERE id = old.user_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_boost_request_before_update
+    BEFORE UPDATE ON public.boost_requests
+    FOR EACH ROW EXECUTE FUNCTION public.handle_boost_request_before_update();
+
+-- 11. AUTOMATIC REFUNDS ON CAMPAIGN STATUS REJECTION
+-- Triggers after updating a boost request status: processes automatic refund on Rejection
+CREATE OR REPLACE FUNCTION public.handle_boost_request_update()
+RETURNS TRIGGER AS $$
+DECLARE
+    balance_change NUMERIC := 0;
+BEGIN
+    IF old.status != 'Rejected' AND new.status = 'Rejected' THEN
+        balance_change := old.amount_npr;
+    ELSIF old.status = 'Rejected' AND new.status != 'Rejected' THEN
+        balance_change := -old.amount_npr;
+    END IF;
+
+    IF balance_change != 0 THEN
+        UPDATE public.profiles
+        SET balance = balance + balance_change
+        WHERE id = old.user_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_boost_request_updated
+    AFTER UPDATE ON public.boost_requests
+    FOR EACH ROW EXECUTE FUNCTION public.handle_boost_request_update();
+
+-- 12. AUTOMATIC BALANCE TOP-UP APPROVALS
+-- Triggers after updating a balance request: processes balance top-ups on admin approval
+CREATE OR REPLACE FUNCTION public.handle_balance_request_update()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF old.status = 'Pending' AND new.status = 'Approved' THEN
+        UPDATE public.profiles
+        SET balance = balance + new.amount
+        WHERE id = new.user_id;
+        
+        INSERT INTO public.audit_logs (action, performed_by, target_user_id, details)
+        VALUES ('approve_topup', auth.uid(), new.user_id, jsonb_build_object('amount', new.amount));
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER on_balance_request_updated
+    AFTER UPDATE ON public.balance_requests
+    FOR EACH ROW EXECUTE FUNCTION public.handle_balance_request_update();
+
+-- 13. ROW-LEVEL SECURITY PROFILE PROTECTION
+-- Triggers before updating profiles: blocks users from updating their own balance or role fields
+CREATE OR REPLACE FUNCTION public.enforce_profile_security()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT role FROM public.profiles WHERE id = auth.uid()) != 'Admin' THEN
+        IF old.balance != new.balance OR old.role != new.role THEN
+            RAISE EXCEPTION 'You are not authorized to directly modify balance or role fields.';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE TRIGGER protect_profiles_balance
+    BEFORE UPDATE ON public.profiles
+    FOR EACH ROW EXECUTE FUNCTION public.enforce_profile_security();
+
 
 -- Enable real-time for public tables
 alter publication supabase_realtime add table public.profiles;

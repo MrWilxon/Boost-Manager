@@ -131,14 +131,6 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
           .from('boost_requests')
           .insert(requestData);
         if (insertErr) throw insertErr;
-
-        const { error: profileErr } = await supabase
-          .from('profiles')
-          .update({
-             balance: (profile?.balance || 0) - eligibility.totalNpr
-          })
-          .eq('id', user?.uid || user?.id);
-        if (profileErr) throw profileErr;
         
         onSuccess("Boost request submitted!");
       }

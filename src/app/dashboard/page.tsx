@@ -136,30 +136,12 @@ export default function DashboardPage() {
     );
 
     try {
-      let balanceChange = 0;
-      const isCurrentlyRefunded = req.status === "Rejected";
-      const willBeRefunded = status === "Rejected";
-
-      if (isCurrentlyRefunded && !willBeRefunded) {
-        balanceChange = -(req.amountNpr || 0);
-      } else if (!isCurrentlyRefunded && willBeRefunded) {
-        balanceChange = req.amountNpr || 0;
-      }
-
       const { error } = await supabase
         .from('boost_requests')
         .update({ status })
         .eq('id', id);
 
       if (error) throw error;
-
-      if (balanceChange !== 0) {
-        const { error: rpcError } = await supabase.rpc('increment_balance', {
-          user_id: req.userId,
-          amount: balanceChange
-        });
-        if (rpcError) throw rpcError;
-      }
       
       refresh();
       setNotification(`Campaign status updated to ${status}`);
@@ -219,12 +201,6 @@ export default function DashboardPage() {
         .eq('id', requestId);
 
       if (error) throw error;
-
-      const { error: rpcError } = await supabase.rpc('increment_balance', {
-        user_id: request.userId,
-        amount: request.amount
-      });
-      if (rpcError) throw rpcError;
 
       setNotification("Top-up request approved successfully!");
       refresh();

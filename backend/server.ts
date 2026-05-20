@@ -3,10 +3,10 @@ import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import dotenv from 'dotenv';
 
-dotenv.config();
+dotenv.config({ path: './backend/.env' });
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 // Supabase Admin Client (using Service Role Key for secure operations)
 const supabaseAdmin = createClient(
