@@ -10,9 +10,14 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>(() => {
-    return (localStorage.getItem('theme') as Theme) || 'dark';
-  });
+  const [theme, setThemeState] = useState<Theme>('dark');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const savedTheme = (localStorage.getItem('theme') as Theme) || 'dark';
+    setThemeState(savedTheme);
+    setMounted(true);
+  }, []);
 
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
@@ -20,6 +25,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
+    if (!mounted) return;
     const root = window.document.documentElement;
     root.classList.remove('light', 'dark');
 
@@ -29,10 +35,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     } else {
       root.classList.add(theme);
     }
-  }, [theme]);
+  }, [theme, mounted]);
 
   // Listen for system theme changes
   useEffect(() => {
+    if (!mounted) return;
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = () => {
       if (theme === 'system') {
@@ -44,7 +51,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [theme]);
+  }, [theme, mounted]);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>

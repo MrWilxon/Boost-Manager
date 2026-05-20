@@ -1,9 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Wallet, CheckCircle2, History, X, Copy } from 'lucide-react';
-import { OperationType, handleFirestoreError } from '../../utils/errorHandlers';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { supabase } from '../../services/supabase';
 import { UserProfile } from '../../types';
 
 interface BalanceTopUpModalProps {
@@ -35,18 +33,19 @@ export const BalanceTopUpModal: React.FC<BalanceTopUpModalProps> = ({
     setError(null);
 
     try {
-      await addDoc(collection(db, "balanceRequests"), {
-        userId: user.uid,
-        username: profile?.username || user.email,
+      const { error: insertError } = await supabase.from('balance_requests').insert({
+        user_id: user?.uid || user?.id,
+        username: profile?.username || user?.email,
         amount: Number(loadAmount),
         status: "Pending",
-        date: new Date().toLocaleString(),
-        createdAt: serverTimestamp(),
       });
+
+      if (insertError) throw insertError;
+
       onSuccess(`Top-up request for रू${loadAmount} submitted.`);
       onClose();
-    } catch (err) {
-      handleFirestoreError(err, OperationType.CREATE, "balanceRequests");
+    } catch (err: any) {
+      console.error(err);
       setError("Failed to submit request. Please try again.");
     } finally {
       setIsSubmitting(false);

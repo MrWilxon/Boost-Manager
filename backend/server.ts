@@ -42,9 +42,9 @@ app.post('/api/delete-request', async (req, res) => {
       return res.status(401).json({ error: 'Invalid token' });
     }
 
-    // 2. Fetch the request and user profile
+        // 2. Fetch the request and user profile
     const { data: request, error: reqError } = await supabaseAdmin
-      .from('requests')
+      .from('boost_requests')
       .select('*')
       .eq('id', requestId)
       .single();
@@ -76,7 +76,7 @@ app.post('/api/delete-request', async (req, res) => {
 
     // Delete request
     const { error: deleteError } = await supabaseAdmin
-      .from('requests')
+      .from('boost_requests')
       .delete()
       .eq('id', requestId);
 

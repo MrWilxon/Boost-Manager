@@ -1,12 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  X, Zap, Settings, Tag, Save, Plus, Trash2, 
-  AlertCircle, Globe, Smartphone, Bell, Receipt
+  X, Zap, Settings, AlertCircle
 } from 'lucide-react';
-import { doc, setDoc } from 'firebase/firestore';
-import { db } from '../../services/firebase';
-import { OperationType, handleFirestoreError } from '../../utils/errorHandlers';
 import { ALL_PLATFORMS } from '../../constants';
 
 interface AdminSettingsProps {
@@ -41,17 +37,11 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
   invoiceConfig,
   onUpdateRate,
   onUpdateWhatsApp,
-  onUpdatePageRole,
   onUpdateAllowedPlatforms,
-  onUpdateAlert,
-  onUpdateInvoiceConfig
 }) => {
   const [localRate, setLocalRate] = useState(rate || 165);
   const [localWhatsApp, setLocalWhatsApp] = useState(whatsappNumber);
-  const [localPageRole, setLocalPageRole] = useState(pageRoleInfo);
   const [localAllowedPlatforms, setLocalAllowedPlatforms] = useState(allowedPlatforms);
-  const [localAlert, setLocalAlert] = useState(adminAlertMessage);
-  const [localInvoice, setLocalInvoice] = useState(invoiceConfig);
 
   const [isDataSaver, setIsDataSaver] = useState(() => localStorage.getItem("data_saver") === "true");
 
@@ -182,8 +172,8 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
                              onClick={() => onUpdateAllowedPlatforms(localAllowedPlatforms)}
                              className="w-full mt-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold"
                            >UPDATE PLATFORMS</button>
-                        </div>
-                     </div>
+                         </div>
+                      </div>
                   </div>
                </div>
             </div>

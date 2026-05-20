@@ -11,21 +11,9 @@ import {
   Phone, 
   User, 
   Wallet,
-  Calendar,
-  CheckCircle2,
-  Clock,
   History
 } from "lucide-react";
-import { 
-  collection, 
-  onSnapshot, 
-  doc, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  orderBy
-} from "firebase/firestore";
-import { db } from "../../services/firebase";
+import { supabase } from "../../services/supabase";
 import { DeleteConfirmationModal } from "../modals/DeleteConfirmationModal";
 import { TableRowSkeleton } from "../common/Skeleton";
 import { motion, AnimatePresence } from "motion/react";
@@ -44,33 +32,61 @@ export function AdminUserManagement() {
     userId: null
   });
 
-  useEffect(() => {
-    const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
-    const unsub = onSnapshot(q, (snap) => {
-      const userData = snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setUsers(userData);
+  const fetchUsers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedUsers = (data || []).map((u: any) => ({
+        id: u.id,
+        username: u.username,
+        email: u.email,
+        phone: u.whatsapp,
+        role: u.role,
+        balance: Number(u.balance),
+        createdAt: u.created_at,
+        businessName: u.business_name || '',
+      }));
+
+      setUsers(mappedUsers);
+    } catch (e) {
+      console.error("Error fetching profiles:", e);
+    } finally {
       setLoading(false);
-    });
-    return unsub;
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+
+    const channel = supabase
+      .channel('profiles-changes-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        fetchUsers();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleUpdateRole = async (userId: string, newRole: string) => {
     try {
-      await updateDoc(doc(db, "users", userId), { role: newRole });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (error) throw error;
       alert("Role updated successfully!");
     } catch (e) {
       console.error(e);
       alert("Failed to update role.");
-    }
-  };
-
-  const handleUpdateBalance = async (userId: string, newBalance: number) => {
-    try {
-      await updateDoc(doc(db, "users", userId), { balance: newBalance });
-      alert("Balance updated successfully!");
-    } catch (e) {
-      console.error(e);
-      alert("Failed to update balance.");
     }
   };
 
@@ -81,7 +97,13 @@ export function AdminUserManagement() {
   const confirmDeleteUser = async () => {
     if (!deleteConfirm.userId) return;
     try {
-      await deleteDoc(doc(db, "users", deleteConfirm.userId));
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', deleteConfirm.userId);
+
+      if (error) throw error;
+
       setDeleteConfirm({ isOpen: false, userId: null });
       alert("User profile deleted.");
     } catch (e) {
@@ -100,8 +122,21 @@ export function AdminUserManagement() {
     if (!editingUser) return;
 
     try {
-      const { id, ...updateData } = editingUser;
-      await updateDoc(doc(db, "users", id), updateData);
+      const { id, username, balance, email, phone, role, businessName } = editingUser;
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          username,
+          balance: Number(balance),
+          email,
+          whatsapp: phone,
+          role,
+          business_name: businessName,
+        })
+        .eq('id', id);
+
+      if (error) throw error;
+
       setIsEditModalOpen(false);
       setEditingUser(null);
       alert("User updated successfully!");
@@ -283,27 +318,6 @@ export function AdminUserManagement() {
         </div>
       </div>
 
-      {/* Quick Balance History Link */}
-      {searchQuery && (
-        <div className="bg-indigo-50 dark:bg-indigo-500/5 p-4 rounded-2xl border border-indigo-100 dark:border-indigo-500/10 flex items-center justify-between">
-          <div className="flex items-center gap-3 text-indigo-700 dark:text-indigo-400 text-sm font-bold">
-            <History size={18} />
-            Want to see transactions for these search results?
-          </div>
-          <button 
-            onClick={() => {
-              const event = new CustomEvent('view-user-history', {
-                detail: { username: searchQuery }
-              });
-              window.dispatchEvent(event);
-            }}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all"
-          >
-            Check History
-          </button>
-        </div>
-      )}
-
       {/* Edit User Modal */}
       <AnimatePresence>
         {isEditModalOpen && editingUser && (
@@ -431,7 +445,7 @@ export function AdminUserManagement() {
         onConfirm={confirmDeleteUser}
         title="Delete User Profile?"
         message="Are you sure you want to delete this user profile? Their data will be lost forever."
-        warning="This action only deletes their profile data from Firestore. It does NOT delete their login account from Firebase Auth."
+        warning="This action only deletes their profile data from Supabase. It does NOT delete their login account from Supabase Auth."
       />
     </div>
   );

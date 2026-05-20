@@ -1,20 +1,22 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, User as FirebaseUser, signOut as firebaseSignOut } from 'firebase/auth';
-import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore';
-import { auth, db } from '../services/firebase';
-import { handleFirestoreError, OperationType } from '../utils/errorHandlers';
+import { supabase } from '../services/supabase';
+import { User, Session } from '@supabase/supabase-js';
 
-interface UserProfile {
+export interface UserProfile {
   uid: string;
+  id: string;
   email: string | null;
   role: 'Admin' | 'User';
   balance: number;
   username: string;
-  mobileNumber?: string;
+  profilePic?: string;
+  whatsapp?: string;
+  profile_pic?: string;
 }
 
 interface AuthContextType {
-  user: FirebaseUser | null;
+  user: User | null;
+  session: Session | null;
   profile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
@@ -22,58 +24,86 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+export const AuthProvider: React.FC<{ children: React.FC | React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let unsubscribeProfile: (() => void) | null = null;
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
+      if (error) throw error;
       
-      if (unsubscribeProfile) {
-        unsubscribeProfile();
-        unsubscribeProfile = null;
+      const mappedProfile: UserProfile = {
+        uid: data.id,
+        id: data.id,
+        email: data.email,
+        role: data.role as 'Admin' | 'User',
+        balance: Number(data.balance),
+        username: data.username,
+        profilePic: data.profile_pic || undefined,
+        whatsapp: data.whatsapp || undefined,
+      };
+
+      setProfile(mappedProfile);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // 1. Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id);
+      } else {
+        setLoading(false);
       }
+    });
 
-      if (firebaseUser) {
-        // First check if profile exists, if not create it
-        const profileRef = doc(db, 'users', firebaseUser.uid);
-        try {
-          const profileSnap = await getDoc(profileRef);
-          const isAdminEmail = firebaseUser.email === 'wilxon.xtha@gmail.com';
-          
-          if (!profileSnap.exists()) {
-            const newProfile: UserProfile = {
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              role: isAdminEmail ? 'Admin' : 'User',
-              balance: isAdminEmail ? 999999 : 0,
-              username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
-            };
-            await setDoc(profileRef, newProfile);
-          } else {
-            const currentRole = profileSnap.data().role;
-            if (isAdminEmail && currentRole !== 'Admin') {
-              await setDoc(profileRef, { role: 'Admin' }, { merge: true });
+    // 2. Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfile(session.user.id);
+        
+        // Real-time updates on profile table (e.g. balance, role)
+        const channel = supabase
+          .channel('profile_changes')
+          .on(
+            'postgres_changes',
+            { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${session.user.id}` },
+            (payload) => {
+              const data = payload.new as any;
+              setProfile({
+                uid: data.id,
+                id: data.id,
+                email: data.email,
+                role: data.role as 'Admin' | 'User',
+                balance: Number(data.balance),
+                username: data.username,
+                profilePic: data.profile_pic || undefined,
+                whatsapp: data.whatsapp || undefined,
+              });
             }
-          }
-        } catch (error) {
-          console.error("Error initializing profile:", error);
-        }
-
-        // Set up real-time listener for profile
-        unsubscribeProfile = onSnapshot(profileRef, (snap) => {
-          if (snap.exists()) {
-            setProfile(snap.data() as UserProfile);
-          }
-          setLoading(false);
-        }, (err) => {
-          console.error("Profile listener error:", err);
-          setLoading(false);
-        });
+          )
+          .subscribe();
+          
+        return () => {
+          supabase.removeChannel(channel);
+        };
       } else {
         setProfile(null);
         setLoading(false);
@@ -81,15 +111,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => {
-      unsubscribeAuth();
-      if (unsubscribeProfile) unsubscribeProfile();
+      subscription.unsubscribe();
     };
   }, []);
 
-  const signOut = () => firebaseSignOut(auth);
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

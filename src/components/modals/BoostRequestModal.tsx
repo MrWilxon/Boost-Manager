@@ -1,15 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Rocket, X, Search, Plus, Trash2, Tag, Globe, 
-  MapPin, MessageSquare, AlertCircle, Info, CheckCircle2,
-  Copy, RotateCw
+  Rocket, X, Globe, AlertCircle, CheckCircle2
 } from 'lucide-react';
-import { db } from '../../services/firebase';
-import { doc, getDoc, addDoc, updateDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { OperationType, handleFirestoreError } from '../../utils/errorHandlers';
-import { APP_CONFIG } from '../../constants';
-import { PromoCode, UserProfile, BoostRequest } from '../../types';
+import { supabase } from '../../services/supabase';
+import { UserProfile } from '../../types';
 import { useBoostEligibility } from '../../hooks/useBoostEligibility';
 
 interface BoostRequestModalProps {
@@ -49,7 +44,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const [isCustomAge, setIsCustomAge] = useState(false);
   const [customAge, setCustomAge] = useState("");
   const [promoCode, setPromoCode] = useState("");
-  const [appliedPromo, setAppliedPromo] = useState<PromoCode | null>(null);
+  const [appliedPromo, setAppliedPromo] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,42 +101,50 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     setError(null);
 
     const requestData = {
-      userId: user.uid,
-      username: profile?.username || user.email,
+      user_id: user?.uid || user?.id,
+      username: profile?.username || user?.email,
       url: modalUrl,
       platforms: selectedPlatforms,
       location: modalLocations.join(", "),
       gender: modalGender,
       age: isCustomAge ? customAge : modalAge,
-      adGoal: modalAdGoal,
+      ad_goal: modalAdGoal,
       destination: modalDestination,
-      allocatedBudget: modalBudget,
+      allocated_budget: modalBudget,
       duration: modalDuration,
       notes: modalNotes,
-      amountNpr: eligibility.totalNpr,
-      rateUsed: eligibility.effectiveRate,
+      amount_npr: eligibility.totalNpr,
+      rate_used: eligibility.effectiveRate,
       status: "Pending" as const,
-      date: new Date().toLocaleDateString(),
-      createdAt: serverTimestamp(),
     };
 
     try {
       if (editingRequestId) {
-        await updateDoc(doc(db, "requests", editingRequestId), requestData);
+        const { error: updateErr } = await supabase
+          .from('boost_requests')
+          .update(requestData)
+          .eq('id', editingRequestId);
+        if (updateErr) throw updateErr;
         onSuccess("Request updated successfully!");
       } else {
-        // Atomic transaction to update balance
-        // Note: Real implementation should use runTransaction
-        await addDoc(collection(db, "requests"), requestData);
-        const userRef = doc(db, "users", user.uid);
-        await updateDoc(userRef, {
-           balance: (profile?.balance || 0) - eligibility.totalNpr
-        });
+        const { error: insertErr } = await supabase
+          .from('boost_requests')
+          .insert(requestData);
+        if (insertErr) throw insertErr;
+
+        const { error: profileErr } = await supabase
+          .from('profiles')
+          .update({
+             balance: (profile?.balance || 0) - eligibility.totalNpr
+          })
+          .eq('id', user?.uid || user?.id);
+        if (profileErr) throw profileErr;
+        
         onSuccess("Boost request submitted!");
       }
       onClose();
-    } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, "requests");
+    } catch (err: any) {
+      console.error(err);
       setError("Failed to process request. Check balance.");
     } finally {
       setIsSubmitting(false);
@@ -184,7 +187,6 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
             </div>
 
             <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
-               {/* Forms and sections would go here - simplified for this thought */}
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* URL Section */}
                   <div className="md:col-span-2 space-y-3">
@@ -239,6 +241,13 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
 
                {/* Submit Button */}
                <div className="space-y-4 pt-6">
+                  {error && (
+                     <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700 flex items-center gap-3">
+                        <AlertCircle size={18} />
+                        <p className="text-xs font-bold">{error}</p>
+                     </div>
+                  )}
+
                   {eligibility.warnings.length > 0 && (
                      <div className="space-y-2">
                         {eligibility.warnings.map((w, i) => (
