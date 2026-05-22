@@ -2,11 +2,13 @@ export type RequestStatus = "Approved" | "Pending" | "Rejected";
 
 export interface UserProfile {
   uid: string;
+  id: string;
   email: string | null;
   role: 'Admin' | 'User';
   balance: number;
   username: string;
   profilePic?: string;
+  profile_pic?: string;
   whatsapp?: string;
   joinDate?: any;
 }

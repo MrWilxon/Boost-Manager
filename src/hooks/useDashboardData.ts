@@ -21,22 +21,19 @@ export const useDashboardData = (
     try {
       setLoading(true);
       
-      // 1. Fetch Boost Requests with pagination
-      let reqQuery = supabase
-        .from('boost_requests')
-        .select('*', { count: 'exact' });
-        
-      if (profile.role !== 'Admin') {
-        reqQuery = reqQuery.eq('user_id', user.id);
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || '';
+
+      // 1. Fetch Boost Requests with pagination via backend
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const reqResponse = await fetch(`${apiUrl}/api/dashboard/boost-requests?page=${currentPage}&limit=${itemsPerPage}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!reqResponse.ok) throw new Error('Failed to fetch boost requests');
       
-      reqQuery = reqQuery
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
-        
-      const { data: reqData, count, error: reqError } = await reqQuery;
-      
-      if (reqError) throw reqError;
+      const { data: reqData, count } = await reqResponse.json();
       
       const mappedRequests: BoostRequest[] = (reqData || []).map((item: any) => ({
         id: item.id,
@@ -67,21 +64,15 @@ export const useDashboardData = (
       setTotalCount(count || 0);
       setHasMore((count || 0) > currentPage * itemsPerPage);
 
-      // 2. Fetch Balance Requests
-      let balQuery = supabase
-        .from('balance_requests')
-        .select('*');
-        
-      if (profile.role !== 'Admin') {
-        balQuery = balQuery.eq('user_id', user.id);
-      }
+      // 2. Fetch Balance Requests via backend
+      const balResponse = await fetch(`${apiUrl}/api/dashboard/balance-requests`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!balResponse.ok) throw new Error('Failed to fetch balance requests');
       
-      balQuery = balQuery
-        .order('created_at', { ascending: false })
-        .limit(100);
-        
-      const { data: balData, error: balError } = await balQuery;
-      if (balError) throw balError;
+      const { data: balData } = await balResponse.json();
       
       const mappedBalanceRequests: BalanceRequest[] = (balData || []).map((item: any) => ({
         id: item.id,
@@ -110,7 +101,7 @@ export const useDashboardData = (
 
     // Setup realtime subscription to auto refresh on any database changes
     const channel = supabase
-      .channel('db-dashboard-changes')
+      .channel(`db-dashboard-changes_${Date.now()}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'boost_requests' },

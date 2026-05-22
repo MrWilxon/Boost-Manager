@@ -3,73 +3,50 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from 'next/navigation';
 import {
-  MessageSquare,
   Plus,
   CheckCircle2,
   Clock,
   XCircle,
-  BarChart3,
   Search,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  X,
   CreditCard,
   LayoutDashboard,
-  AlertCircle,
   Rocket,
-  Users2,
   Wallet,
-  Archive,
-  BarChart2,
-  PieChart as PieChartIcon,
+  BarChart3,
+  Users2,
   Settings,
-  Tag,
-  Trash2,
-  Eye,
   RotateCw,
-  Facebook,
-  Copy,
-  History,
   AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/src/services/supabase";
 import { useAuth } from "@/src/context/AuthContext";
-import { useTheme } from "@/src/context/ThemeContext";
 import { Navbar } from '@/src/components/layout/Navbar';
 import { Analytics } from "@/src/components/dashboard/Analytics";
 import { AdminUserManagement } from "@/src/components/dashboard/AdminUserManagement";
-import { AdminLocationManagement } from "@/src/components/dashboard/AdminLocationManagement";
 import { BoostRequestTable } from "@/src/components/dashboard/BoostRequestTable";
 import { BalanceRequestTable } from "@/src/components/dashboard/BalanceRequestTable";
 import { AdminSettings } from "@/src/components/dashboard/AdminSettings";
 import { BoostRequestModal } from "@/src/components/modals/BoostRequestModal";
 import { BalanceTopUpModal } from "@/src/components/modals/BalanceTopUpModal";
-import { InvoiceGenerator } from "@/src/components/dashboard/InvoiceGenerator";
-import { 
-  StatCard, 
-  StatusBadge 
-} from "@/src/components/dashboard/shared/DashboardComponents";
-import { CardSkeleton, TableRowSkeleton } from "@/src/components/common/Skeleton";
+import { StatCard, StatusBadge } from "@/src/components/dashboard/shared/DashboardComponents";
 import { DeleteConfirmationModal } from "@/src/components/modals/DeleteConfirmationModal";
-import { ErrorBoundary } from "@/src/components/common/ErrorBoundary";
 import { useDashboardData } from "@/src/hooks/useDashboardData";
-import { APP_CONFIG, ALL_PLATFORMS } from "@/src/constants";
 import { BoostRequest, BalanceRequest, RequestStatus } from "@/src/types";
+
+type TabType = "requests" | "analytics" | "users" | "balance";
 
 export default function DashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
-  const { theme, setTheme } = useTheme();
   const router = useRouter();
-  
+
   const [itemsPerPage, setItemsPerPage] = useState(50);
-  const { 
-    requests, 
-    balanceRequests, 
-    loading: dataLoading, 
-    currentPage, 
-    hasMore, 
+  const {
+    requests,
+    balanceRequests,
+    loading: dataLoading,
+    currentPage,
+    hasMore,
     paginate,
     setRequests,
     setBalanceRequests,
@@ -79,10 +56,10 @@ export default function DashboardPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadMoneyModalOpen, setIsLoadMoneyModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [selectedInvoiceReq, setSelectedInvoiceReq] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState<"requests" | "analytics" | "users" | "chat">("requests");
-  
-  // Advanced Filtering States
+  const [editingRequest, setEditingRequest] = useState<BoostRequest | null>(null);
+  const [activeTab, setActiveTab] = useState<TabType>("requests");
+
+  // Filtering
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState("All");
   const [filterStatus, setFilterStatus] = useState<string>("All");
@@ -90,100 +67,92 @@ export default function DashboardPage() {
   const [notification, setNotification] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
-    type: 'request' | 'account' | 'balanceRequest';
+    type: 'request' | 'account';
     data: any;
-  }>({
-    isOpen: false,
-    type: 'request',
-    data: null
-  });
+  }>({ isOpen: false, type: 'request', data: null });
 
+  // Admin Settings State
   const [rate, setRate] = useState<number>(165);
   const [whatsappNumber, setWhatsappNumber] = useState<string>("+977-9843398340");
   const [pageRoleInfo, setPageRoleInfo] = useState<string>("fb.com/admin_profile");
-  const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>([
-    "All Platforms",
-    "Facebook",
-    "Instagram",
-    "TikTok",
-    "YouTube",
-    "Twitter",
-    "LinkedIn"
-  ]);
+  const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>(["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]);
   const [adminAlertMessage, setAdminAlertMessage] = useState<string>("");
 
+  // Auth guard
   useEffect(() => {
     if (!authLoading && !user) {
       router.push('/login');
     }
   }, [user, authLoading, router]);
 
+  // Auto-clear notification
   useEffect(() => {
     if (notification) {
-      const timer = setTimeout(() => setNotification(null), 2000);
+      const timer = setTimeout(() => setNotification(null), 3000);
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
+  const showNotification = (msg: string) => setNotification(msg);
 
   const handleUpdateStatus = async (id: string, status: RequestStatus) => {
     const req = requests.find((r) => r.id === id);
     if (!req) return;
 
-    // Optimistic Update
     const previousRequests = [...requests];
-    setRequests((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, status } : r))
-    );
+    setRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
 
     try {
-      const { error } = await supabase
-        .from('boost_requests')
-        .update({ status })
-        .eq('id', id);
-
+      const { error } = await supabase.from('boost_requests').update({ status }).eq('id', id);
       if (error) throw error;
-      
+
+      // Handle balance refund when rejecting
+      if (status === 'Rejected' && req.status !== 'Rejected' && req.amountNpr) {
+        await supabase.rpc('increment_balance', { user_id: req.userId, amount: req.amountNpr });
+      }
+      // Undo refund if un-rejecting
+      if (req.status === 'Rejected' && status !== 'Rejected' && req.amountNpr) {
+        await supabase.rpc('increment_balance', { user_id: req.userId, amount: -req.amountNpr });
+      }
+
+      showNotification(`Status updated to ${status}`);
       refresh();
-      setNotification(`Campaign status updated to ${status}`);
     } catch (error: any) {
       setRequests(previousRequests);
-      console.error(error);
       alert(error.message || "Failed to update status.");
     }
   };
 
   const handleDeleteRequest = (req: any) => {
-    setDeleteConfirm({
-      isOpen: true,
-      type: "request",
-      data: req
-    });
+    setDeleteConfirm({ isOpen: true, type: "request", data: req });
   };
 
   const handlePerformDelete = async () => {
     const { type, data } = deleteConfirm;
-    if (type !== "account" && !data) return;
-
     try {
-      if (type === "request") {
-        const { error } = await supabase
-          .from('boost_requests')
-          .delete()
-          .eq('id', data.id);
-        if (error) throw error;
-        setNotification("Campaign permanently deleted.");
+      if (type === "request" && data) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token || '';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        
+        const response = await fetch(`${apiUrl}/api/delete-request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ requestId: data.id })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to delete request');
+        }
+        
+        showNotification("Campaign deleted successfully.");
         refresh();
-      } else if (type === "account") {
-        const { error } = await supabase
-          .from('profiles')
-          .delete()
-          .eq('id', user!.id);
-        if (error) throw error;
-        await supabase.auth.signOut();
-        router.push('/');
       }
     } catch (error: any) {
-      console.error(error);
       alert(error.message || "Deletion failed.");
     } finally {
       setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
@@ -195,178 +164,221 @@ export default function DashboardPage() {
     if (!request) return;
 
     try {
-      const { error } = await supabase
-        .from('balance_requests')
-        .update({ status: "Approved" })
-        .eq('id', requestId);
-
+      const { error } = await supabase.from('balance_requests').update({ status: "Approved" }).eq('id', requestId);
       if (error) throw error;
 
-      setNotification("Top-up request approved successfully!");
+      const { error: rpcError } = await supabase.rpc('increment_balance', {
+        user_id: request.userId,
+        amount: request.amount
+      });
+      if (rpcError) throw rpcError;
+
+      showNotification("Top-up approved! Balance updated.");
       refresh();
     } catch (error: any) {
-      console.error(error);
       alert(error.message || "Failed to approve top-up.");
     }
   };
 
-  const stats = useMemo(
-    () => ({
-      total: requests.length,
-      approved: requests.filter((r) => r.status === "Approved").length,
-      pending: requests.filter((r) => r.status === "Pending").length,
-      rejected: requests.filter((r) => r.status === "Rejected").length,
-    }),
-    [requests],
-  );
+  const handleRejectBalance = async (requestId: string) => {
+    try {
+      const { error } = await supabase.from('balance_requests').update({ status: "Rejected" }).eq('id', requestId);
+      if (error) throw error;
+      showNotification("Balance request rejected.");
+      refresh();
+    } catch (error: any) {
+      alert(error.message || "Failed to reject request.");
+    }
+  };
+
+  const stats = useMemo(() => ({
+    total: requests.length,
+    approved: requests.filter((r) => r.status === "Approved").length,
+    pending: requests.filter((r) => r.status === "Pending").length,
+    rejected: requests.filter((r) => r.status === "Rejected").length,
+  }), [requests]);
 
   const filteredRequests = useMemo(() => {
     return requests.filter(req => {
-      const matchesSearch = (req.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            (req.url || '').toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesPlatform = platformFilter === "All" || req.platforms?.includes(platformFilter);
+      const matchesSearch = !searchQuery ||
+        (req.username || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (req.url || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (req.adGoal || '').toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPlatform = platformFilter === "All" || req.platforms?.includes(platformFilter) || req.platform === platformFilter;
       const matchesStatus = filterStatus === "All" || req.status === filterStatus;
       return matchesSearch && matchesPlatform && matchesStatus;
     });
   }, [requests, searchQuery, platformFilter, filterStatus]);
 
+  const pendingBalanceCount = useMemo(() => balanceRequests.filter(r => r.status === 'Pending').length, [balanceRequests]);
+
   if (authLoading || !user || !profile) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex flex-col items-center justify-center gap-4">
-        <RotateCw className="animate-spin text-indigo-600 w-10 h-10" />
-        <p className="text-sm font-bold text-slate-500 uppercase tracking-widest">Loading secure dashboard...</p>
+      <div className="min-h-screen bg-[#1A1C1E] flex flex-col items-center justify-center gap-4" suppressHydrationWarning>
+        <RotateCw className="animate-spin text-indigo-500 w-10 h-10" />
+        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Initializing Engine...</p>
       </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 selection:bg-indigo-100 dark:selection:bg-indigo-900/30">
-      <Navbar profile={profile} />
+  const tabs = [
+    { id: 'requests' as TabType, label: 'Campaigns' },
+    { id: 'analytics' as TabType, label: 'Analytics' },
+    ...(profile.role === 'Admin' ? [
+      { id: 'balance' as TabType, label: `Top-ups${pendingBalanceCount ? ` (${pendingBalanceCount})` : ''}` },
+      { id: 'users' as TabType, label: 'Users' },
+    ] : []),
+  ];
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-10 space-y-12">
-        {/* Banner Alert */}
+  return (
+    <div className="min-h-screen bg-[#1A1C1E] text-zinc-100 font-sans selection:bg-indigo-500/30" suppressHydrationWarning>
+      {/* Background Glow */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px] mix-blend-screen" />
+        <div className="absolute inset-0 noise-overlay opacity-20 mix-blend-overlay"></div>
+      </div>
+
+      <div className="relative z-10">
+        <Navbar onSettings={() => {}} />
+
+        <main className="max-w-7xl mx-auto px-4 md:px-8 py-10 space-y-8">
+
+        {/* Admin Alert Banner */}
         {adminAlertMessage && (
-          <div className="p-4 bg-indigo-600 text-white rounded-2xl flex items-center justify-between shadow-lg shadow-indigo-600/20">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="animate-pulse" />
-              <span className="text-sm font-bold">{adminAlertMessage}</span>
-            </div>
+          <div className="p-4 bg-indigo-600 text-white rounded-2xl flex items-center gap-3 shadow-lg shadow-indigo-600/20">
+            <AlertTriangle className="animate-pulse shrink-0" size={20} />
+            <span className="text-sm font-bold">{adminAlertMessage}</span>
           </div>
         )}
 
-        {/* Info Header */}
+        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-3xl font-black tracking-tight">Dashboard Overview</h1>
-            <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium mt-1">
-              Welcome back, <span className="text-indigo-600 font-bold">{profile.username}</span>! Manage your social growth efficiently.
+            <h1 className="text-4xl font-black tracking-tight text-white">Command Center</h1>
+            <p className="text-zinc-500 text-sm font-medium mt-1">
+              Active Session: <span className="text-indigo-400 font-bold">{profile.username}</span>
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 shrink-0 flex-wrap">
             {profile.role === "Admin" && (
-              <button 
+              <button
                 onClick={() => setIsSettingsModalOpen(true)}
-                className="p-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm text-slate-600 dark:text-zinc-300 hover:scale-105 transition-all"
+                className="btn-icon w-11 h-11"
+                title="System Configuration"
               >
-                <Settings size={20} />
+                <Settings size={18} />
               </button>
             )}
-            <button 
+            <button
               onClick={() => setIsLoadMoneyModalOpen(true)}
-              className="px-6 py-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-emerald-600/20 flex items-center gap-2"
+              className="btn-success px-5 py-3 rounded-xl flex items-center gap-2"
             >
-              <CreditCard size={18} /> Load Balance
+              <CreditCard size={14} /> Load Capital
             </button>
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="px-6 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-indigo-600/20 flex items-center gap-2"
+            <button
+              onClick={() => { setEditingRequest(null); setIsModalOpen(true); }}
+              className="btn-primary px-5 py-3 rounded-xl flex items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
             >
-              <Plus size={18} /> New Campaign
+              <Plus size={14} /> Deploy Campaign
             </button>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatCard title="Current Balance" value={`रू ${profile.balance?.toLocaleString() || 0}`} icon={<Wallet size={24} />} color="emerald" />
-          <StatCard title="Total Campaigns" value={stats.total} icon={<LayoutDashboard size={24} />} color="indigo" />
-          <StatCard title="Approved" value={stats.approved} icon={<CheckCircle2 size={24} />} color="emerald" />
-          <StatCard title="Pending Review" value={stats.pending} icon={<Clock size={24} />} color="amber" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+          <StatCard title="Balance" value={`रू ${(profile.balance || 0).toLocaleString()}`} icon={<Wallet size={22} />} color="emerald" gradient={true} />
+          <StatCard title="Total Campaigns" value={stats.total} icon={<LayoutDashboard size={22} />} color="indigo" />
+          <StatCard title="Approved" value={stats.approved} icon={<CheckCircle2 size={22} />} color="emerald" />
+          <StatCard title="Pending" value={stats.pending} icon={<Clock size={22} />} color="amber" />
         </div>
 
-        {/* Tabs Bar */}
-        <div className="flex border-b border-slate-200 dark:border-zinc-800">
-          {(['requests', 'analytics', 'users'] as const).map((tab) => {
-            if (tab === 'users' && profile.role !== 'Admin') return null;
-            return (
+        {/* Tabs */}
+        <div className="flex justify-start overflow-x-auto table-scrollbar py-2">
+          <div className="tab-pill-wrapper flex-nowrap">
+            {tabs.map((tab) => (
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-8 py-4 text-xs font-black uppercase tracking-widest border-b-2 transition-all ${
-                  activeTab === tab 
-                    ? 'border-indigo-600 text-indigo-600' 
-                    : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200'
-                }`}
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`tab-pill whitespace-nowrap ${activeTab === tab.id ? 'active' : ''}`}
               >
-                {tab}
+                {tab.label}
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
 
-        {/* Tab Contents */}
-        <div className="space-y-6">
+        {/* Tab Content */}
+        <div>
           {activeTab === "requests" && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               {/* Filters */}
-              <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex flex-col md:flex-row gap-4 nm-flat border border-white/5 rounded-2xl p-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
                   <input
                     type="text"
                     placeholder="Search campaigns..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-medium outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
+                    className="w-full pl-12 pr-4 py-3 nm-inset rounded-xl text-sm font-medium outline-none focus:border-indigo-500/30 focus:ring-4 focus:ring-indigo-500/5 transition-all text-white placeholder:text-zinc-600 border border-black/20"
                   />
                 </div>
-                <select
-                  value={platformFilter}
-                  onChange={(e) => setPlatformFilter(e.target.value)}
-                  className="px-6 py-3.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold outline-none"
-                >
-                  <option value="All">All Platforms</option>
-                  <option value="Facebook">Facebook</option>
-                  <option value="Instagram">Instagram</option>
-                  <option value="TikTok">TikTok</option>
-                  <option value="YouTube">YouTube</option>
-                </select>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="px-6 py-3.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-bold outline-none"
-                >
-                  <option value="All">All Statuses</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Rejected">Rejected</option>
-                </select>
+                
+                <div className="flex gap-3 shrink-0">
+                  <div className="relative min-w-[160px]">
+                    <select
+                      value={platformFilter}
+                      onChange={(e) => setPlatformFilter(e.target.value)}
+                      className="w-full px-4 py-3 nm-inset rounded-xl text-xs uppercase tracking-widest font-black outline-none text-zinc-300 focus:border-indigo-500/30 appearance-none cursor-pointer pr-10 border border-black/20"
+                    >
+                      <option value="All" className="bg-[#1A1C1E]">All Networks</option>
+                      {allowedPlatforms.map(p => <option key={p} value={p} className="bg-[#1A1C1E]">{p}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-xs">▼</div>
+                  </div>
+
+                  <div className="relative min-w-[160px]">
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="w-full px-4 py-3 nm-inset rounded-xl text-xs uppercase tracking-widest font-black outline-none text-zinc-300 focus:border-indigo-500/30 appearance-none cursor-pointer pr-10 border border-black/20"
+                    >
+                      <option value="All" className="bg-[#1A1C1E]">All Statuses</option>
+                      <option value="Pending" className="bg-[#1A1C1E]">Pending</option>
+                      <option value="Approved" className="bg-[#1A1C1E]">Approved</option>
+                      <option value="Rejected" className="bg-[#1A1C1E]">Rejected</option>
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-xs">▼</div>
+                  </div>
+                </div>
               </div>
 
-              {/* Table */}
-              <BoostRequestTable 
-                requests={filteredRequests} 
-                profile={profile} 
-                onUpdateStatus={handleUpdateStatus} 
-                onDelete={handleDeleteRequest} 
-                loading={dataLoading} 
+              <BoostRequestTable
+                requests={filteredRequests}
+                profile={profile}
+                loading={dataLoading}
+                currentPage={currentPage}
+                itemsPerPage={itemsPerPage}
+                hasMore={hasMore}
+                onUpdateStatus={handleUpdateStatus}
+                onDelete={handleDeleteRequest}
+                onStartEditing={(req) => { setEditingRequest(req); setIsModalOpen(true); }}
+                onPaginate={paginate}
+                onSetItemsPerPage={setItemsPerPage}
               />
             </div>
           )}
 
-          {activeTab === "analytics" && (
-            <Analytics requests={requests} />
+          {activeTab === "analytics" && <Analytics requests={requests} />}
+
+          {activeTab === "balance" && profile.role === "Admin" && (
+            <BalanceRequestTable
+              requests={balanceRequests}
+              profile={profile}
+              onApprove={handleApproveBalance}
+              onReject={handleRejectBalance}
+            />
           )}
 
           {activeTab === "users" && profile.role === "Admin" && (
@@ -376,68 +388,69 @@ export default function DashboardPage() {
       </main>
 
       {/* Modals */}
-      <BoostRequestModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        profile={profile} 
-        user={user} 
-        rate={rate} 
-        editingRequestId={null} 
-        onSuccess={(msg) => setNotification(msg)} 
-        requests={requests} 
+      <BoostRequestModal
+        isOpen={isModalOpen}
+        onClose={() => { setIsModalOpen(false); setEditingRequest(null); }}
+        profile={profile}
+        user={user}
+        rate={rate}
+        editingRequestId={editingRequest?.id || null}
+        onSuccess={showNotification}
+        requests={requests}
       />
 
-      <BalanceTopUpModal 
-        isOpen={isLoadMoneyModalOpen} 
-        onClose={() => setIsLoadMoneyModalOpen(false)} 
-        profile={profile} 
-        user={user} 
-        onSuccess={(msg) => setNotification(msg)} 
+      <BalanceTopUpModal
+        isOpen={isLoadMoneyModalOpen}
+        onClose={() => setIsLoadMoneyModalOpen(false)}
+        profile={profile}
+        user={user}
+        onSuccess={showNotification}
       />
 
-      <AdminSettings 
-        isOpen={isSettingsModalOpen} 
-        onClose={() => setIsSettingsModalOpen(false)} 
-        rate={rate} 
-        whatsappNumber={whatsappNumber} 
-        pageRoleInfo={pageRoleInfo} 
-        allowedPlatforms={allowedPlatforms} 
-        adminAlertMessage={adminAlertMessage} 
+      <AdminSettings
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        rate={rate}
+        whatsappNumber={whatsappNumber}
+        pageRoleInfo={pageRoleInfo}
+        allowedPlatforms={allowedPlatforms}
+        adminAlertMessage={adminAlertMessage}
         invoiceConfig={{
           companyName: "BOOST MANAGER",
           companySubtitle: "Digital Solutions",
           billToLocation: "KATHMANDU, NEPAL"
-        }} 
-        onUpdateRate={(val) => setRate(val)} 
-        onUpdateWhatsApp={(val) => setWhatsappNumber(val)} 
-        onUpdatePageRole={(val) => setPageRoleInfo(val)} 
-        onUpdateAllowedPlatforms={(val) => setAllowedPlatforms(val)} 
-        onUpdateAlert={(val) => setAdminAlertMessage(val)} 
-        onUpdateInvoiceConfig={() => {}} 
+        }}
+        onUpdateRate={setRate}
+        onUpdateWhatsApp={setWhatsappNumber}
+        onUpdatePageRole={setPageRoleInfo}
+        onUpdateAllowedPlatforms={setAllowedPlatforms}
+        onUpdateAlert={setAdminAlertMessage}
+        onUpdateInvoiceConfig={() => {}}
       />
 
-      {/* Notification popup */}
+      <DeleteConfirmationModal
+        isOpen={deleteConfirm.isOpen}
+        onClose={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={handlePerformDelete}
+        title="Delete Campaign?"
+        message="This campaign will be permanently removed. If it was Pending, your balance will be refunded automatically."
+      />
+
+      {/* Toast Notification */}
       <AnimatePresence>
         {notification && (
           <motion.div
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-[200] bg-zinc-900 text-white dark:bg-white dark:text-zinc-950 px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-xs uppercase tracking-widest border border-white/10 dark:border-slate-100"
+            className="fixed bottom-6 right-6 z-[200] nm-flat border border-emerald-500/20 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-black text-[10px] uppercase tracking-widest"
           >
-            <CheckCircle2 className="text-emerald-500 animate-pulse" size={18} />
+            <CheckCircle2 className="text-emerald-500" size={18} />
             {notification}
           </motion.div>
         )}
       </AnimatePresence>
-
-      <DeleteConfirmationModal
-        isOpen={deleteConfirm.isOpen}
-        onClose={() => setDeleteConfirm({ isOpen: false, type: 'request', data: null })}
-        onConfirm={handlePerformDelete}
-        title={deleteConfirm.type === 'request' ? 'Permanently Delete Boost Campaign?' : 'Deactivate & Delete Account?'}
-        message={deleteConfirm.type === 'request' ? 'Are you sure you want to delete this campaign? If approved, balance refunds are handled automatically.' : 'This action is irreversible and deletes your full profile records.'}
-      />
+      </div>
     </div>
   );
 }

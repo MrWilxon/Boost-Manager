@@ -24,21 +24,25 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.FC | React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (userId: string, token: string) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) throw error;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const response = await fetch(`${apiUrl}/api/profile/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch profile from backend');
+      }
+      
+      const data = await response.json();
       
       const mappedProfile: UserProfile = {
         uid: data.id,
@@ -64,8 +68,8 @@ export const AuthProvider: React.FC<{ children: React.FC | React.ReactNode }> = 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchProfile(session.user.id);
+      if (session?.user && session?.access_token) {
+        fetchProfile(session.user.id, session.access_token);
       } else {
         setLoading(false);
       }
@@ -76,12 +80,12 @@ export const AuthProvider: React.FC<{ children: React.FC | React.ReactNode }> = 
       setSession(session);
       setUser(session?.user ?? null);
       
-      if (session?.user) {
-        fetchProfile(session.user.id);
+      if (session?.user && session?.access_token) {
+        fetchProfile(session.user.id, session.access_token);
         
         // Real-time updates on profile table (e.g. balance, role)
         const channel = supabase
-          .channel('profile_changes')
+          .channel(`profile_changes_${Date.now()}`)
           .on(
             'postgres_changes',
             { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${session.user.id}` },

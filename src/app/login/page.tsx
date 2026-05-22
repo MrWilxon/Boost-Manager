@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/src/services/supabase';
 import { motion } from 'motion/react';
-import { Rocket, Mail, Lock, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { Rocket, Mail, Lock, LogIn, AlertCircle, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -55,105 +55,167 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 flex items-center justify-center p-4">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-2xl shadow-xl border border-slate-200 dark:border-zinc-800 p-8"
-      >
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 mb-4">
-            <Rocket className="text-white fill-white/20" size={32} />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">Welcome Back</h1>
-          <p className="text-slate-500 dark:text-zinc-400 text-sm mt-2">Log in to manage your ad boosts</p>
-        </div>
+    <div className="min-h-screen bg-[#1A1C1E] flex selection:bg-indigo-500/30 font-sans relative overflow-hidden">
+      {/* Universal Background Noise Overlay */}
+      <div className="absolute inset-0 noise-overlay opacity-[0.03] pointer-events-none z-0"></div>
 
-        {error && (
-          <div className="mb-6 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-xl flex gap-3 text-rose-600 dark:text-rose-400 text-sm italic">
-            <AlertCircle size={18} className="shrink-0" />
-            {error}
-          </div>
-        )}
+      {/* Left Panel - Visual/Brand (Hidden on Mobile) */}
+      <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-12 overflow-hidden border-r border-black/30 z-10 bg-[#1A1C1E]">
+         {/* Animated Background */}
+         <div className="absolute inset-0 z-0">
+            <div className="absolute top-[-10%] left-[-20%] w-[70%] h-[70%] rounded-full bg-indigo-600/10 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
+            <div className="absolute bottom-[-10%] right-[-20%] w-[60%] h-[60%] rounded-full bg-rose-600/5 blur-[100px] mix-blend-screen animate-pulse" style={{ animationDuration: '12s' }} />
+         </div>
+         
+         <div className="relative z-10 flex items-center gap-3">
+            <div className="bg-indigo-600/90 p-2.5 rounded-xl shadow-[-4px_-4px_10px_rgba(255,255,255,0.05),_4px_4px_10px_rgba(0,0,0,0.5)]">
+               <Rocket className="text-white w-5 h-5" />
+            </div>
+            <span className="text-xl font-black tracking-tight text-white">BOOSTMGR</span>
+         </div>
+         
+         <div className="relative z-10 max-w-md">
+            <motion.h2 
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.8, delay: 0.2 }}
+               className="text-4xl font-black text-white leading-[1.1] tracking-tight mb-6"
+            >
+               Deploy campaigns at the speed of thought.
+            </motion.h2>
+            <motion.div 
+               initial={{ opacity: 0, y: 20 }}
+               animate={{ opacity: 1, y: 0 }}
+               transition={{ duration: 0.8, delay: 0.4 }}
+               className="space-y-4"
+            >
+               {[
+                 'Zero-latency campaign deployment',
+                 'Algorithmic targeting engine',
+                 'Automated ROI optimization'
+               ].map((feature, i) => (
+                  <div key={i} className="flex items-center gap-3">
+                     <div className="w-5 h-5 rounded-full bg-emerald-500/15 flex items-center justify-center text-emerald-400">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                     </div>
+                     <span className="text-zinc-400 font-medium text-sm">{feature}</span>
+                  </div>
+               ))}
+            </motion.div>
+         </div>
 
-        <form onSubmit={handleEmailLogin} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
-              <input 
-                type="email"
-                required
-                className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 transition-all font-medium"
-                placeholder="name@company.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+         <div className="relative z-10 text-xs font-bold text-zinc-600 uppercase tracking-widest">
+            © {new Date().getFullYear()} Boost Manager System
+         </div>
+      </div>
+
+      {/* Right Panel - Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative z-10 bg-[#1A1C1E]">
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, ease: "circOut" }}
+          className="w-full max-w-sm relative z-10"
+        >
+          <div className="mb-10 text-center lg:text-left">
+            <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
+               <div className="bg-indigo-600 p-2.5 rounded-xl shadow-[-4px_-4px_10px_rgba(255,255,255,0.05),_4px_4px_10px_rgba(0,0,0,0.5)]">
+                  <Rocket className="text-white w-5 h-5" />
+               </div>
+               <span className="text-xl font-black tracking-tight text-white">BOOSTMGR</span>
             </div>
+            <h1 className="text-3xl font-black text-white tracking-tight mb-2">Welcome back.</h1>
+            <p className="text-zinc-500 text-sm font-medium">Enter your credentials to access the engine.</p>
           </div>
 
-          <div>
-            <div className="flex justify-between mb-1.5 ml-1">
-              <label className="text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Password</label>
-              <Link href="/forgot-password" className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline">Forgot?</Link>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex gap-3 text-rose-400 text-sm font-medium shadow-[inset_-3px_-3px_8px_rgba(255,255,255,0.01),_inset_3px_3px_8px_rgba(0,0,0,0.4)]"
+            >
+              <AlertCircle size={18} className="shrink-0 mt-0.5" />
+              {error}
+            </motion.div>
+          )}
+
+          <form onSubmit={handleEmailLogin} className="space-y-5">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Email Address</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <input 
+                  type="email"
+                  required
+                  className="w-full pl-12 pr-4 py-4 nm-inset rounded-xl text-white outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder:text-zinc-600 focus:ring-4 focus:ring-indigo-500/5 text-sm"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
-              <input 
-                type={showPassword ? "text" : "password"}
-                required
-                className="w-full pl-11 pr-12 py-3 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 transition-all font-medium"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-300 transition-colors"
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </button>
+
+            <div className="space-y-1.5">
+              <div className="flex justify-between items-center ml-1">
+                <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">Password</label>
+                <Link href="/forgot-password" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">Forgot?</Link>
+              </div>
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="w-full pl-12 pr-12 py-4 nm-inset rounded-xl text-white outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder:text-zinc-600 focus:ring-4 focus:ring-indigo-500/5 text-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 mt-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black uppercase tracking-widest transition-all shadow-[-4px_-4px_12px_rgba(255,255,255,0.05),_4px_4px_12px_rgba(0,0,0,0.5)] hover:shadow-[-5px_-5px_15px_rgba(255,255,255,0.08),_5px_5px_15px_rgba(0,0,0,0.6)] flex items-center justify-center gap-2 group disabled:opacity-50 text-xs active:scale-[0.98] active:shadow-[inset_-3px_-3px_8px_rgba(255,255,255,0.04),_inset_3px_3px_8px_rgba(0,0,0,0.6)] cursor-pointer"
+            >
+              {loading ? (
+                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  Authenticate <LogIn size={16} className="group-hover:translate-x-1 transition-transform" />
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="my-8 flex items-center gap-4">
+            <div className="h-px flex-1 bg-black/40 shadow-[0_1px_0_rgba(255,255,255,0.02)]"></div>
+            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">or continue with</span>
+            <div className="h-px flex-1 bg-black/40 shadow-[0_1px_0_rgba(255,255,255,0.02)]"></div>
           </div>
 
           <button 
-            type="submit"
+            onClick={handleGoogleLogin}
+            type="button"
             disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-100 dark:shadow-indigo-900/20 flex items-center justify-center gap-2 group disabled:opacity-50"
+            className="w-full py-4 nm-flat hover:nm-concave text-white rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-50 text-sm active:scale-[0.98] active:shadow-[inset_-3px_-3px_8px_rgba(255,255,255,0.02),_inset_3px_3px_8px_rgba(0,0,0,0.6)] cursor-pointer"
           >
-            {loading ? 'Logging in...' : (
-              <>
-                <LogIn size={18} className="group-hover:translate-x-1 transition-transform" />
-                Sign In
-              </>
-            )}
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5" alt="Google" />
+            Continue with Google
           </button>
-        </form>
 
-        <div className="my-8 flex items-center gap-4">
-          <div className="h-px flex-1 bg-slate-100 dark:bg-zinc-800"></div>
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">or</span>
-          <div className="h-px flex-1 bg-slate-100 dark:bg-zinc-800"></div>
-        </div>
-
-        <button 
-          onClick={handleGoogleLogin}
-          type="button"
-          disabled={loading}
-          className="w-full py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 hover:bg-slate-50 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-xl font-bold transition-all flex items-center justify-center gap-3 mb-6 group disabled:opacity-50"
-        >
-          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5" alt="Google" />
-          Continue with Google
-        </button>
-
-        <p className="text-center text-slate-500 dark:text-zinc-400 text-sm">
-          Don't have an account? <Link href="/signup" className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline">Sign up for free</Link>
-        </p>
-        <p className="text-center text-slate-500 dark:text-zinc-400 text-sm mt-6">
-          <Link href="/privacy-policy" className="text-xs font-bold text-slate-400 dark:text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 uppercase tracking-widest hover:underline">Privacy Policy</Link>
-        </p>
-      </motion.div>
+          <p className="text-center text-zinc-500 text-xs font-medium mt-10">
+            No active session? <Link href="/signup" className="text-white font-bold hover:underline">Request access</Link>
+          </p>
+        </motion.div>
+      </div>
     </div>
   );
 }

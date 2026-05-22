@@ -17,22 +17,10 @@ import {
 import { Download, TrendingUp, DollarSign, Target, Globe, Clock, Calendar, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-interface Request {
-  id: string;
-  userId: string;
-  username: string;
-  url: string;
-  allocatedBudget: number;
-  amountNpr: number;
-  date: string;
-  createdAt: any;
-  status: string;
-  adGoal: string;
-  platforms: string[];
-}
+import { BoostRequest } from '../../types';
 
 interface AnalyticsProps {
-  requests: Request[];
+  requests: BoostRequest[];
   role?: 'Admin' | 'User';
 }
 
@@ -93,7 +81,7 @@ export const Analytics: React.FC<AnalyticsProps> = ({ requests, role = 'User' })
   }, [requests, compareMode, period1, period2]);
 
   const stats = useMemo(() => {
-    const filterByPeriod = (reqs: Request[], p: {start: string, end: string}) => {
+    const filterByPeriod = (reqs: BoostRequest[], p: {start: string, end: string}) => {
       if (!p.start || !p.end) return reqs;
       return reqs.filter(r => r.date >= p.start && r.date <= p.end);
     };
@@ -109,14 +97,14 @@ export const Analytics: React.FC<AnalyticsProps> = ({ requests, role = 'User' })
       active: approved,
       rejected: targetReqs.filter(r => r.status === 'Rejected').length,
       pending: targetReqs.filter(r => r.status === 'Pending').length,
-      totalSpent: targetReqs.filter(r => r.status === 'Approved').reduce((sum, r) => sum + r.allocatedBudget, 0),
+      totalSpent: targetReqs.filter(r => r.status === 'Approved').reduce((sum, r) => sum + (r.allocatedBudget || r.amountNpr || 0), 0),
       totalRequests: total,
       successRate: successRate
     };
 
     if (compareReqs) {
       const compApproved = compareReqs.filter(r => r.status === 'Approved').length;
-      const compTotalSpent = compareReqs.filter(r => r.status === 'Approved').reduce((sum, r) => sum + r.allocatedBudget, 0);
+      const compTotalSpent = compareReqs.filter(r => r.status === 'Approved').reduce((sum, r) => sum + (r.allocatedBudget || r.amountNpr || 0), 0);
       return {
         ...currentStats,
         compareSpent: compTotalSpent,

@@ -4,6 +4,18 @@
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
 DROP FUNCTION IF EXISTS public.increment_balance(UUID, NUMERIC);
+DROP FUNCTION IF EXISTS public.is_admin();
+
+-- Helper function to check if current user is admin without triggering RLS recursion
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+DECLARE
+    is_admin BOOLEAN;
+BEGIN
+    SELECT role = 'Admin' INTO is_admin FROM public.profiles WHERE id = auth.uid();
+    RETURN COALESCE(is_admin, false);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- 1. PROFILES TABLE
 -- Maps user accounts and profiles. References auth.users from Supabase auth dashboard.
@@ -29,12 +41,7 @@ CREATE POLICY "Users can update their own profile fields" ON public.profiles
     WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Admins can manage all profiles" ON public.profiles
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles 
-            WHERE id = auth.uid() AND role = 'Admin'
-        )
-    );
+    FOR ALL USING (public.is_admin());
 
 -- 2. BOOST REQUESTS TABLE
 -- Tracks client orders for boosting services
@@ -68,12 +75,7 @@ CREATE POLICY "Users can view and manage their own boost requests" ON public.boo
     FOR ALL USING (auth.uid() = user_id);
 
 CREATE POLICY "Admins can manage all boost requests" ON public.boost_requests
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles 
-            WHERE id = auth.uid() AND role = 'Admin'
-        )
-    );
+    FOR ALL USING (public.is_admin());
 
 -- 3. BALANCE REQUESTS TABLE
 -- Tracks top-up and payment verification requests
@@ -98,12 +100,7 @@ CREATE POLICY "Users can insert their own balance requests" ON public.balance_re
     FOR INSERT WITH CHECK (auth.uid() = user_id AND status = 'Pending');
 
 CREATE POLICY "Admins can manage all balance requests" ON public.balance_requests
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles 
-            WHERE id = auth.uid() AND role = 'Admin'
-        )
-    );
+    FOR ALL USING (public.is_admin());
 
 -- 4. PROMO CODES TABLE
 CREATE TABLE IF NOT EXISTS public.promo_codes (
@@ -124,12 +121,7 @@ CREATE POLICY "Anyone can view active promo codes" ON public.promo_codes
     FOR SELECT USING (is_active = true);
 
 CREATE POLICY "Admins can manage promo codes" ON public.promo_codes
-    FOR ALL USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles 
-            WHERE id = auth.uid() AND role = 'Admin'
-        )
-    );
+    FOR ALL USING (public.is_admin());
 
 -- 5. AUDIT LOGS TABLE
 CREATE TABLE IF NOT EXISTS public.audit_logs (
@@ -146,12 +138,7 @@ CREATE TABLE IF NOT EXISTS public.audit_logs (
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins can select audit logs" ON public.audit_logs
-    FOR SELECT USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles 
-            WHERE id = auth.uid() AND role = 'Admin'
-        )
-    );
+    FOR SELECT USING (public.is_admin());
 
 -- 6. AUTOMATIC PROFILE CREATION TRIGGER
 -- Triggers profile record insert when standard auth.users creates account
@@ -253,7 +240,7 @@ DECLARE
     balance_diff NUMERIC;
 BEGIN
     -- Prevent non-admins from changing status or editing non-pending campaigns
-    IF (SELECT role FROM public.profiles WHERE id = auth.uid()) != 'Admin' THEN
+    IF NOT public.is_admin() THEN
         IF old.status != new.status THEN
             RAISE EXCEPTION 'You are not authorized to change the status of this campaign.';
         END IF;
@@ -338,7 +325,7 @@ CREATE OR REPLACE TRIGGER on_balance_request_updated
 CREATE OR REPLACE FUNCTION public.enforce_profile_security()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF (SELECT role FROM public.profiles WHERE id = auth.uid()) != 'Admin' THEN
+    IF NOT public.is_admin() THEN
         IF old.balance != new.balance OR old.role != new.role THEN
             RAISE EXCEPTION 'You are not authorized to directly modify balance or role fields.';
         END IF;

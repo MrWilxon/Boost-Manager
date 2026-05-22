@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
-  Rocket, X, Globe, AlertCircle, CheckCircle2
+  X, Globe, Users, Wallet, Search, AlertCircle, Info, Ticket, ChevronDown
 } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { UserProfile } from '../../types';
@@ -29,12 +29,12 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   requests
 }) => {
   const [modalUrl, setModalUrl] = useState("");
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Facebook"]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Facebook", "Instagram"]); // Default to both based on screenshot 'All'
   const [modalLocations, setModalLocations] = useState<string[]>(["All Nepal"]);
-  const [modalGender, setModalGender] = useState("All");
-  const [modalAge, setModalAge] = useState("18 - 65+");
-  const [modalAdGoal, setModalAdGoal] = useState("Messages");
-  const [modalDestination, setModalDestination] = useState("WhatsApp");
+  const [modalGender, setModalGender] = useState("Both");
+  const [modalAge, setModalAge] = useState("18-65");
+  const [modalAdGoal, setModalAdGoal] = useState("Get Message");
+  const [modalDestination, setModalDestination] = useState("Messenger");
   const [modalBudget, setModalBudget] = useState(5);
   const [modalDuration, setModalDuration] = useState(5);
   const [modalNotes, setModalNotes] = useState("");
@@ -47,6 +47,8 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const [appliedPromo, setAppliedPromo] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPromoInput, setShowPromoInput] = useState(false);
+  const [showTextFormat, setShowTextFormat] = useState(false);
 
   const eligibility = useBoostEligibility({
     modalBudget,
@@ -67,30 +69,31 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
       const req = requests.find(r => r.id === editingRequestId);
       if (req) {
         setModalUrl(req.url || "");
-        setSelectedPlatforms(req.platforms || ["Facebook"]);
+        setSelectedPlatforms(req.platforms || ["Facebook", "Instagram"]);
         setModalLocations(req.location?.split(", ") || ["All Nepal"]);
-        setModalGender(req.gender || "All");
-        setModalAge(req.age || "18 - 65+");
-        setModalAdGoal(req.adGoal || "Messages");
-        setModalDestination(req.destination || "WhatsApp");
+        setModalGender(req.gender || "Both");
+        setModalAge(req.age || "18-65");
+        setModalAdGoal(req.adGoal || "Get Message");
+        setModalDestination(req.destination || "Messenger");
         setModalBudget(req.allocatedBudget || 5);
         setModalDuration(req.duration || 5);
         setModalNotes(req.notes || "");
       }
     } else if (!editingRequestId && isOpen) {
-       // Reset form
        setModalUrl("");
-       setSelectedPlatforms(["Facebook"]);
+       setSelectedPlatforms(["Facebook", "Instagram"]);
        setModalLocations(["All Nepal"]);
-       setModalGender("All");
-       setModalAge("18 - 65+");
-       setModalAdGoal("Messages");
-       setModalDestination("WhatsApp");
+       setModalGender("Both");
+       setModalAge("18-65");
+       setModalAdGoal("Get Message");
+       setModalDestination("Messenger");
        setModalBudget(5);
        setModalDuration(5);
        setModalNotes("");
        setAppliedPromo(null);
        setPromoCode("");
+       setShowPromoInput(false);
+       setShowTextFormat(false);
     }
   }, [editingRequestId, isOpen, requests]);
 
@@ -143,6 +146,75 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     }
   };
 
+  const handleApplyPromo = async () => {
+    if (!promoCode) return;
+    try {
+      setError(null);
+      const { data, error: promoErr } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', promoCode.toUpperCase())
+        .single();
+        
+      if (promoErr || !data) {
+        setError("Invalid promo code.");
+        setAppliedPromo(null);
+        return;
+      }
+      if (!data.is_active) {
+        setError("Promo code is no longer active.");
+        setAppliedPromo(null);
+        return;
+      }
+      setAppliedPromo(data);
+    } catch (err: any) {
+      setError("Error applying promo code.");
+      setAppliedPromo(null);
+    }
+  };
+
+  const hasPlatform = (p: string) => selectedPlatforms.includes(p);
+  const togglePlatform = (p: string) => {
+    if (p === 'All') {
+      setSelectedPlatforms(['Facebook', 'Instagram']);
+      return;
+    }
+    if (selectedPlatforms.includes(p)) {
+      setSelectedPlatforms(prev => prev.filter(x => x !== p));
+    } else {
+      setSelectedPlatforms(prev => [...prev, p]);
+    }
+  };
+
+  const isAllPlatforms = selectedPlatforms.includes('Facebook') && selectedPlatforms.includes('Instagram');
+
+  const dailyBudget = modalBudget && modalDuration ? (modalBudget / modalDuration).toFixed(2) : "0.00";
+
+  const generateTextFormat = () => {
+    return `🚀 *New Boost Campaign Request*
+
+*URL:* ${modalUrl || 'Not provided'}
+*Platforms:* ${selectedPlatforms.join(', ')}
+*Location:* ${modalLocations.join(', ')}
+*Gender:* ${modalGender}
+*Age:* ${isCustomAge ? customAge : modalAge}
+*Ad Goal:* ${modalAdGoal}
+*Destination:* ${modalDestination}
+
+*Budget:* $${modalBudget}
+*Duration:* ${modalDuration} days
+*Total Payable:* रू${eligibility.totalNpr.toLocaleString()}
+
+*Notes:* ${modalNotes || 'None'}`;
+  };
+
+  const handleWhatsAppSupport = () => {
+    const text = encodeURIComponent(generateTextFormat());
+    // Use the admin whatsapp number from props or fallback
+    const adminPhone = "9779843398340";
+    window.open(`https://wa.me/${adminPhone}?text=${text}`, '_blank');
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -152,124 +224,391 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
           />
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-zinc-900 rounded-[32px] shadow-2xl overflow-hidden border border-slate-200 dark:border-zinc-800 flex flex-col"
+            className="relative w-full max-w-5xl max-h-[90vh] nm-flat rounded-3xl overflow-hidden flex flex-col text-zinc-100 border border-white/5"
           >
             {/* Modal Header */}
-            <div className="px-8 py-6 border-b border-slate-100 dark:border-zinc-800 flex justify-between items-center bg-slate-50/50 dark:bg-zinc-900/50">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-600/20">
-                  <Rocket size={24} />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black text-slate-900 dark:text-zinc-100 tracking-tight">
-                    {editingRequestId ? "Edit Boost Campaign" : "Launch New Campaign"}
-                  </h3>
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-[0.2em]">Fill in your campaign blueprints</p>
-                </div>
+            <div className="px-8 py-6 flex justify-between items-start border-b border-black/30 bg-[#161719]/40">
+              <div>
+                <h3 className="text-xl font-black text-white tracking-tight">
+                  {editingRequestId ? "Edit Boost Campaign" : "Deploy Boost Campaign"}
+                </h3>
+                <p className="text-xs font-medium text-zinc-500 mt-1">Configure your boost request with maximum targeting options.</p>
               </div>
-              <button onClick={onClose} className="p-3 hover:bg-slate-200 dark:hover:bg-zinc-800 rounded-2xl transition-all">
-                <X size={24} className="text-slate-400" />
+              <button onClick={onClose} className="p-2 hover:nm-flat hover:text-white rounded-xl transition-all duration-200 text-zinc-400 cursor-pointer">
+                <X size={18} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-8 space-y-10 custom-scrollbar">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* URL Section */}
-                  <div className="md:col-span-2 space-y-3">
-                     <label className="flex items-center gap-2 text-xs font-black text-slate-700 dark:text-zinc-300 uppercase tracking-widest ml-1">
-                        <Globe size={14} className="text-indigo-500" /> Campaign URL
-                     </label>
-                     <input 
+            <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                
+                {/* LEFT COLUMN */}
+                <div className="space-y-8">
+                  
+                  {/* Campaign Details Section */}
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
+                        <Globe size={16} className="text-indigo-400" />
+                      </div>
+                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-100">Campaign Details</h4>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">URL TO BOOST</label>
+                      <input 
                         type="url"
                         value={modalUrl}
                         onChange={(e) => setModalUrl(e.target.value)}
-                        placeholder="Paste your post or page link here..."
-                        className="w-full px-5 py-4 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-sm font-medium outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all shadow-sm"
-                     />
-                  </div>
-                  
-                  {/* Budget & Duration */}
-                  <div className="space-y-6">
-                     <div className="space-y-3">
-                        <label className="text-xs font-black text-slate-700 dark:text-zinc-300 uppercase tracking-widest ml-1">Total Budget ($)</label>
-                        <input 
-                          type="number"
-                          value={modalBudget}
-                          onChange={(e) => setModalBudget(Number(e.target.value))}
-                          className="w-full px-5 py-4 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-lg font-black outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                        />
-                     </div>
-                     <div className="space-y-3">
-                        <label className="text-xs font-black text-slate-700 dark:text-zinc-300 uppercase tracking-widest ml-1">Duration (Days)</label>
-                        <input 
-                          type="number"
-                          value={modalDuration}
-                          onChange={(e) => setModalDuration(Number(e.target.value))}
-                          className="w-full px-5 py-4 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-2xl text-lg font-black outline-none focus:ring-4 focus:ring-indigo-500/10 transition-all"
-                        />
-                     </div>
+                        placeholder="https://facebook.com/posts/..."
+                        className="input-base border-l-2 border-l-indigo-500/40 border-black/25"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">PLATFORM</label>
+                      <div className="flex gap-3">
+                        <button 
+                          onClick={() => togglePlatform('All')}
+                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                            isAllPlatforms 
+                              ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
+                              : 'nm-flat hover:nm-concave text-zinc-400 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          All
+                        </button>
+                        <button 
+                          onClick={() => togglePlatform('Facebook')}
+                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                            !isAllPlatforms && hasPlatform('Facebook') 
+                              ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
+                              : 'nm-flat hover:nm-concave text-zinc-400 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          Facebook
+                        </button>
+                        <button 
+                          onClick={() => togglePlatform('Instagram')}
+                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                            !isAllPlatforms && hasPlatform('Instagram') 
+                              ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
+                              : 'nm-flat hover:nm-concave text-zinc-400 hover:text-white border border-white/5'
+                          }`}
+                        >
+                          Instagram
+                        </button>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* Summary Box */}
-                  <div className="bg-indigo-600 rounded-3xl p-8 text-white shadow-2xl shadow-indigo-600/30 relative overflow-hidden flex flex-col justify-between">
-                     <div className="relative z-10">
-                        <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-60 mb-1">Total Due (NPR)</p>
-                        <h4 className="text-5xl font-black tracking-tighter">रू{eligibility.totalNpr.toLocaleString()}</h4>
-                        <div className="mt-4 inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full border border-white/10 backdrop-blur-md">
-                           <span className="text-[10px] font-bold uppercase tracking-widest">Rate: रू{eligibility.effectiveRate}/$</span>
+                  {/* Filters & Targeting Section */}
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
+                        <Users size={16} className="text-indigo-400" />
+                      </div>
+                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-100">Filters & Targeting</h4>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">LOCATION</label>
+                        <input 
+                          type="text"
+                          value={modalLocations[0]}
+                          onChange={(e) => setModalLocations([e.target.value])}
+                          className="input-base border-l-2 border-l-indigo-500/40 border-black/25"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">GENDER</label>
+                        <div className="relative">
+                          <select 
+                            value={modalGender}
+                            onChange={(e) => setModalGender(e.target.value)}
+                            className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
+                          >
+                            <option className="bg-[#1A1C1E]">Both</option>
+                            <option className="bg-[#1A1C1E]">Male</option>
+                            <option className="bg-[#1A1C1E]">Female</option>
+                          </select>
+                          <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
                         </div>
-                     </div>
-                     <div className="absolute top-0 right-0 p-8 opacity-10">
-                        <Rocket size={120} />
-                     </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">AGE</label>
+                          {!isCustomAge ? (
+                            <div className="relative">
+                              <select 
+                                value={modalAge}
+                                onChange={(e) => setModalAge(e.target.value)}
+                                className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
+                              >
+                                <option className="bg-[#1A1C1E]">13-17</option>
+                                <option className="bg-[#1A1C1E]">18-65</option>
+                                <option className="bg-[#1A1C1E]">18-24</option>
+                                <option className="bg-[#1A1C1E]">25-34</option>
+                                <option className="bg-[#1A1C1E]">35-44</option>
+                                <option className="bg-[#1A1C1E]">45-54</option>
+                                <option className="bg-[#1A1C1E]">55-64</option>
+                              </select>
+                              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                            </div>
+                          ) : (
+                            <input 
+                              type="text"
+                              value={customAge}
+                              onChange={(e) => setCustomAge(e.target.value)}
+                              placeholder="e.g. 21-30"
+                              className="input-base border-l-2 border-l-indigo-500/40 border-black/25"
+                            />
+                          )}
+                          <div className="flex items-center gap-2 pt-1.5 pl-1">
+                            <input 
+                              type="checkbox" 
+                              id="customAgeToggle"
+                              checked={isCustomAge}
+                              onChange={(e) => setIsCustomAge(e.target.checked)}
+                              className="accent-indigo-500 cursor-pointer w-3.5 h-3.5 rounded border-white/10"
+                            />
+                            <label htmlFor="customAgeToggle" className="text-[10px] font-bold text-zinc-400 cursor-pointer uppercase tracking-widest">Custom Age</label>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">AD GOAL</label>
+                        <div className="relative">
+                          <select 
+                            value={modalAdGoal}
+                            onChange={(e) => setModalAdGoal(e.target.value)}
+                            className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
+                          >
+                            <option className="bg-[#1A1C1E]">Get Message</option>
+                            <option className="bg-[#1A1C1E]">Engagement</option>
+                            <option className="bg-[#1A1C1E]">Website Traffic</option>
+                            <option className="bg-[#1A1C1E]">Reach</option>
+                          </select>
+                          <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">DEST.</label>
+                      <div className="relative">
+                        <select 
+                          value={modalDestination}
+                          onChange={(e) => setModalDestination(e.target.value)}
+                          className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
+                        >
+                          <option className="bg-[#1A1C1E]">Messenger</option>
+                          <option className="bg-[#1A1C1E]">WhatsApp</option>
+                          <option className="bg-[#1A1C1E]">Instagram Direct</option>
+                          <option className="bg-[#1A1C1E]">Website</option>
+                        </select>
+                        <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => setShowTextFormat(!showTextFormat)}
+                      className="flex items-center justify-center gap-2 px-4 py-2 nm-flat hover:nm-concave rounded-full text-xs font-bold text-zinc-400 hover:text-white transition-all w-fit cursor-pointer active:scale-[0.95]"
+                    >
+                      <Search size={14} /> {showTextFormat ? 'Hide Text Format' : 'Show Text Format'}
+                    </button>
+
+                    <AnimatePresence>
+                      {showTextFormat && (
+                        <motion.div 
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="p-4 nm-inset border border-black/20 rounded-2xl space-y-3 mt-4">
+                            <pre className="text-[11px] font-mono text-zinc-400 whitespace-pre-wrap">
+                              {generateTextFormat()}
+                            </pre>
+                            <div className="flex gap-3 pt-3 border-t border-black/20">
+                              <button 
+                                onClick={() => {
+                                  navigator.clipboard.writeText(generateTextFormat());
+                                  onSuccess("Copied to clipboard!");
+                                }}
+                                className="btn-ghost flex-1 py-2.5 cursor-pointer"
+                              >
+                                Copy Text
+                              </button>
+                              <button 
+                                onClick={handleWhatsAppSupport}
+                                className="flex-1 py-2.5 rounded-xl bg-[#25D366]/10 hover:bg-[#25D366]/20 border border-[#25D366]/20 text-[#25D366] text-[10px] font-black uppercase tracking-widest transition-all active:scale-[0.97] cursor-pointer"
+                              >
+                                Send to WhatsApp
+                              </button>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
-               </div>
 
-               {/* Submit Button */}
-               <div className="space-y-4 pt-6">
-                  {error && (
-                     <div className="p-4 rounded-2xl bg-rose-50 border border-rose-100 text-rose-700 flex items-center gap-3">
-                        <AlertCircle size={18} />
-                        <p className="text-xs font-bold">{error}</p>
-                     </div>
-                  )}
+                </div>
 
-                  {eligibility.warnings.length > 0 && (
-                     <div className="space-y-2">
-                        {eligibility.warnings.map((w, i) => (
-                           <div key={i} className={`p-4 rounded-2xl flex items-center gap-3 border ${
-                              w.type === 'error' ? 'bg-rose-50 border-rose-100 text-rose-700' :
-                              w.type === 'warning' ? 'bg-amber-50 border-amber-100 text-amber-700' :
-                              'bg-blue-50 border-blue-100 text-blue-700'
-                           }`}>
-                              {w.type === 'error' ? <X size={18} /> : <AlertCircle size={18} />}
-                              <p className="text-xs font-bold">{w.message}</p>
-                           </div>
-                        ))}
-                     </div>
-                  )}
+                {/* RIGHT COLUMN */}
+                <div className="space-y-6">
+                  
+                  {/* Budget & Payment Box */}
+                  <div className="nm-flat border border-white/5 rounded-3xl p-6 space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
+                        <Wallet size={16} className="text-indigo-400" />
+                      </div>
+                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-100">Budget & Payment</h4>
+                    </div>
 
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!eligibility.isEligible || isSubmitting}
-                    className="w-full py-5 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 dark:disabled:bg-zinc-800 text-white rounded-2xl font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-3 active:scale-[0.98]"
-                  >
-                    {isSubmitting ? (
-                      <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <>
-                        {editingRequestId ? 'Update Campaign' : 'Deploy Campaign'} <CheckCircle2 size={24} />
-                      </>
-                    )}
-                  </button>
-               </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">TOTAL BUDGET ($)</label>
+                          <span className="text-[10px] font-bold text-rose-500">${dailyBudget}/d</span>
+                        </div>
+                        <input 
+                          type="number"
+                          min="1"
+                          value={modalBudget}
+                          onChange={(e) => setModalBudget(Math.max(1, Number(e.target.value)))}
+                          className="input-base border-l-2 border-l-indigo-500/40 border-black/25 text-lg font-black"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">DURATION (D)</label>
+                        <input 
+                          type="number"
+                          min="1"
+                          value={modalDuration}
+                          onChange={(e) => setModalDuration(Math.max(1, Number(e.target.value)))}
+                          className="input-base border-l-2 border-l-indigo-500/40 border-black/25 text-lg font-black"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      {!showPromoInput ? (
+                        <button 
+                          onClick={() => setShowPromoInput(true)}
+                          className="text-[10px] font-black text-indigo-400 uppercase tracking-widest hover:text-indigo-300 transition-colors cursor-pointer ml-1"
+                        >
+                          I HAVE A PROMO CODE
+                        </button>
+                      ) : (
+                        <div className="flex gap-2">
+                          <input 
+                            type="text"
+                            placeholder="ENTER CODE"
+                            value={promoCode}
+                            onChange={(e) => setPromoCode(e.target.value)}
+                            className="flex-1 input-base border-l-2 border-l-indigo-500/40 border-black/25 text-xs font-black uppercase"
+                          />
+                          <button 
+                            onClick={handleApplyPromo} 
+                            className="btn-primary py-2.5 cursor-pointer"
+                          >
+                            Apply
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="border-t border-black/25 pt-5 space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">RATE</span>
+                        <span className="text-sm font-black text-white">रू{eligibility.effectiveRate}/$</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">PAYABLE</span>
+                        <span className="text-4xl font-black text-rose-500 tracking-tighter">रू{eligibility.totalNpr.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
+                        <span className={`text-[10px] font-black uppercase tracking-widest ${eligibility.isEligible ? 'text-emerald-500' : 'text-rose-500'}`}>
+                          {eligibility.isEligible ? 'ELIGIBLE' : 'INELIGIBLE'}
+                        </span>
+                        <span className="text-xs font-medium text-zinc-400">
+                          Balance: रू{(profile?.balance || 0).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Operational Logic Checks */}
+                    <div className="space-y-3 pt-2">
+                      <h5 className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mb-1">OPERATIONAL LOGIC CHECK</h5>
+                      
+                      {/* Show eligibility warnings using the hook */}
+                      {eligibility.warnings.map((warning, idx) => (
+                        <div key={idx} className={`p-3 rounded-xl border flex gap-3 text-sm font-medium ${
+                          warning.type === 'error' 
+                            ? 'bg-rose-500/5 border-rose-500/10 text-rose-400' 
+                            : 'bg-indigo-500/5 border-indigo-500/10 text-indigo-400'
+                        }`}>
+                          <div className="mt-0.5">
+                            {warning.type === 'error' ? <AlertCircle size={16} /> : <Info size={16} />}
+                          </div>
+                          <p className="leading-tight">{warning.message}</p>
+                        </div>
+                      ))}
+
+                      {/* Display an error from submission if any */}
+                      {error && (
+                         <div className="p-3 rounded-xl border bg-rose-500/5 border-rose-500/10 text-rose-400 flex gap-3 text-sm font-medium">
+                            <div className="mt-0.5"><AlertCircle size={16} /></div>
+                            <p className="leading-tight">{error}</p>
+                         </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">NOTES</label>
+                    <textarea 
+                      value={modalNotes}
+                      onChange={(e) => setModalNotes(e.target.value)}
+                      placeholder="Instructions..."
+                      className="input-base border-l-2 border-l-indigo-500/40 border-black/25 min-h-[100px] resize-none"
+                    />
+                  </div>
+
+                </div>
+              </div>
             </div>
+
+            {/* Bottom Actions Bar */}
+            <div className="px-8 py-5 bg-[#161719]/40 border-t border-black/30 flex gap-4 mt-auto">
+              <button 
+                onClick={onClose}
+                className="btn-ghost px-8 py-3.5 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleSubmit}
+                disabled={!eligibility.isEligible || isSubmitting}
+                className="btn-primary flex-1 py-3.5 disabled:bg-zinc-900 disabled:text-zinc-600 disabled:border-white/5 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer"
+              >
+                {isSubmitting ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  editingRequestId ? 'Update Request' : 'Submit Request'
+                )}
+              </button>
+            </div>
+
           </motion.div>
         </div>
       )}

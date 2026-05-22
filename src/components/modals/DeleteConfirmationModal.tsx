@@ -51,30 +51,30 @@ export function DeleteConfirmationModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+          className="absolute inset-0 bg-black/80 backdrop-blur-md"
         />
         <motion.div 
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative w-full max-w-md bg-white dark:bg-zinc-950 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 dark:border-zinc-800"
+          className="relative w-full max-w-md bg-[#101012] rounded-3xl shadow-2xl overflow-hidden border border-white/5"
         >
           <div className="p-6">
             <div className="flex items-center gap-4 mb-6">
-              <div className="p-3 bg-rose-100 dark:bg-rose-500/20 rounded-full text-rose-600 dark:text-rose-400">
+              <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 shrink-0">
                 <AlertTriangle size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-zinc-100">{title}</h3>
-                <p className="text-sm text-slate-500">{message}</p>
+                <h3 className="text-lg font-black text-white tracking-tight">{title}</h3>
+                <p className="text-xs font-medium text-zinc-400 mt-1">{message}</p>
               </div>
             </div>
 
-            <div className="bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 rounded-xl p-4 mb-6">
-              <p className="text-xs font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2">
-                <Trash2 size={14} /> WARNING
+            <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-4 mb-6">
+              <p className="text-[10px] font-black text-rose-400 flex items-center gap-2 uppercase tracking-widest">
+                <Trash2 size={12} /> WARNING
               </p>
-              <p className="text-xs text-rose-600/80 dark:text-rose-400/80 mt-1">
+              <p className="text-xs font-medium text-rose-400/70 mt-1.5 leading-relaxed">
                 {warning}
               </p>
             </div>
@@ -82,7 +82,7 @@ export function DeleteConfirmationModal({
             <div className="flex gap-3">
               <button 
                 onClick={onClose}
-                className="flex-1 px-4 py-3 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 font-bold rounded-xl text-sm transition-all"
+                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-black uppercase tracking-widest rounded-xl text-xs transition-all border border-white/5"
               >
                 Cancel
               </button>
@@ -92,13 +92,13 @@ export function DeleteConfirmationModal({
                   onConfirm();
                   onClose();
                 }}
-                className={`flex-1 px-4 py-3 font-bold rounded-xl text-sm transition-all flex items-center justify-center gap-2 ${
+                className={`flex-1 px-4 py-3 font-black uppercase tracking-widest rounded-xl text-xs transition-all flex items-center justify-center gap-2 ${
                   canConfirm 
-                    ? "bg-rose-600 hover:bg-rose-700 text-white" 
-                    : "bg-slate-200 dark:bg-zinc-800 text-slate-400 cursor-not-allowed"
+                    ? "bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/20 active:scale-[0.98]" 
+                    : "bg-white/5 text-zinc-600 border border-white/5 cursor-not-allowed"
                 }`}
               >
-                {!canConfirm && <Clock size={16} className="animate-pulse" />}
+                {!canConfirm && <Clock size={14} className="animate-pulse" />}
                 Confirm {!canConfirm && `(${countdown}s)`}
               </button>
             </div>
@@ -106,9 +106,9 @@ export function DeleteConfirmationModal({
           
           <button 
             onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 transition-colors"
+            className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </motion.div>
       </div>
