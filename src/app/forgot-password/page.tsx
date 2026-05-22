@@ -39,10 +39,10 @@ export default function ForgotPassword() {
       >
         <div className="flex flex-col items-center mb-8">
           <div className="bg-indigo-600 p-3 rounded-2xl shadow-lg shadow-indigo-200 dark:shadow-indigo-900/20 mb-4">
-            <Rocket className="text-white fill-white/20" size={32} />
+            <Rocket className="text-main fill-white/20" size={32} />
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-zinc-100">Reset Password</h1>
-          <p className="text-slate-500 dark:text-zinc-400 text-sm mt-2 text-center">We'll send you instructions to reset your password</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-main">Reset Password</h1>
+          <p className="text-slate-500 dark:text-muted text-sm mt-2 text-center">We'll send you instructions to reset your password</p>
         </div>
 
         {error && (
@@ -61,13 +61,13 @@ export default function ForgotPassword() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
+            <label className="block text-xs font-bold text-slate-500 dark:text-muted uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-muted" size={18} />
               <input 
                 type="email"
                 required
-                className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-zinc-100 placeholder:text-slate-400 dark:placeholder:text-zinc-500 transition-all font-medium"
+                className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:text-main placeholder:text-slate-400 dark:placeholder:text-muted transition-all font-medium"
                 placeholder="name@company.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -90,7 +90,7 @@ export default function ForgotPassword() {
         </form>
 
         <div className="mt-8">
-          <Link href="/login" className="flex items-center justify-center gap-2 text-slate-500 dark:text-zinc-400 text-sm font-bold hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+          <Link href="/login" className="flex items-center justify-center gap-2 text-slate-500 dark:text-muted text-sm font-bold hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
             <ArrowLeft size={16} />
             Back to login
           </Link>

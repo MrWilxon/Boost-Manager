@@ -65,8 +65,8 @@ export function DeleteConfirmationModal({
                 <AlertTriangle size={24} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-white tracking-tight">{title}</h3>
-                <p className="text-xs font-medium text-zinc-400 mt-1">{message}</p>
+                <h3 className="text-lg font-black text-main tracking-tight">{title}</h3>
+                <p className="text-xs font-medium text-muted mt-1">{message}</p>
               </div>
             </div>
 
@@ -82,7 +82,7 @@ export function DeleteConfirmationModal({
             <div className="flex gap-3">
               <button 
                 onClick={onClose}
-                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white font-black uppercase tracking-widest rounded-xl text-xs transition-all border border-white/5"
+                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-muted hover:text-main font-black uppercase tracking-widest rounded-xl text-xs transition-all border border-white/5"
               >
                 Cancel
               </button>
@@ -94,7 +94,7 @@ export function DeleteConfirmationModal({
                 }}
                 className={`flex-1 px-4 py-3 font-black uppercase tracking-widest rounded-xl text-xs transition-all flex items-center justify-center gap-2 ${
                   canConfirm 
-                    ? "bg-rose-600 hover:bg-rose-500 text-white shadow-lg shadow-rose-600/20 active:scale-[0.98]" 
+                    ? "bg-rose-600 hover:bg-rose-500 text-main shadow-lg shadow-rose-600/20 active:scale-[0.98]" 
                     : "bg-white/5 text-zinc-600 border border-white/5 cursor-not-allowed"
                 }`}
               >
@@ -106,7 +106,7 @@ export function DeleteConfirmationModal({
           
           <button 
             onClick={onClose}
-            className="absolute top-6 right-6 text-zinc-500 hover:text-white transition-colors"
+            className="absolute top-6 right-6 text-muted hover:text-main transition-colors"
           >
             <X size={18} />
           </button>

@@ -64,8 +64,8 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
           >
             <div className="flex justify-between items-start mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Admin Control Panel</h2>
-                <p className="text-slate-500 dark:text-zinc-400 text-sm">Global System Configurations</p>
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-main">Admin Control Panel</h2>
+                <p className="text-slate-500 dark:text-muted text-sm">Global System Configurations</p>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-lg">
                 <X size={20} />
@@ -81,8 +81,8 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
                            <Zap size={24} />
                         </div>
                         <div>
-                           <h4 className="text-slate-900 dark:text-zinc-100 font-bold">Bandwidth Saver Mode</h4>
-                           <p className="text-sm text-slate-500 dark:text-zinc-400">Reduce cloud syncing for slower connections.</p>
+                           <h4 className="text-slate-900 dark:text-main font-bold">Bandwidth Saver Mode</h4>
+                           <p className="text-sm text-slate-500 dark:text-muted">Reduce cloud syncing for slower connections.</p>
                         </div>
                      </div>
                      <button
@@ -135,7 +135,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
                               />
                               <button 
                                 onClick={() => onUpdateWhatsApp(localWhatsApp)}
-                                className="px-6 bg-emerald-600 text-white rounded-xl text-xs font-bold"
+                                className="px-6 bg-emerald-600 text-main rounded-xl text-xs font-bold"
                               >SET</button>
                            </div>
                         </div>

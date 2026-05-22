@@ -42,7 +42,7 @@ export const StatCard = ({
         <div className="flex justify-between items-start z-10 w-full">
           <div>
             <p className="text-emerald-400/80 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{title}</p>
-            <h3 className="text-3xl font-black text-white leading-none tracking-tight">{value}</h3>
+            <h3 className="text-3xl font-black text-main leading-none tracking-tight">{value}</h3>
           </div>
           <div className="p-3 rounded-xl nm-inset text-emerald-400 border border-emerald-500/25 shadow-inner">
             {icon}
@@ -64,8 +64,8 @@ export const StatCard = ({
       
       <div className="flex justify-between items-start z-10 w-full">
         <div>
-          <p className="text-zinc-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{title}</p>
-          <h3 className="text-2xl font-black text-white leading-none tracking-tight">{value}</h3>
+          <p className="text-muted text-[10px] font-black uppercase tracking-[0.2em] mb-1">{title}</p>
+          <h3 className="text-2xl font-black text-main leading-none tracking-tight">{value}</h3>
         </div>
         <div className={`p-3 rounded-xl nm-inset ${cls}`}>
           {icon}

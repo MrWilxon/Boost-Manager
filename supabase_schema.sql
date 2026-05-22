@@ -27,6 +27,8 @@ CREATE TABLE IF NOT EXISTS public.profiles (
     balance NUMERIC(12, 2) NOT NULL DEFAULT 0.00 CHECK (balance >= 0),
     profile_pic TEXT,
     whatsapp TEXT,
+    referral_code TEXT UNIQUE,
+    referred_by UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL
 );
 
@@ -147,6 +149,9 @@ RETURNS TRIGGER AS $$
 DECLARE
     isAdmin BOOLEAN;
     initialBalance NUMERIC;
+    generated_code TEXT;
+    referrer_id UUID := NULL;
+    referrer_code TEXT;
 BEGIN
     -- Assign Admin role for target main user
     IF new.email = 'wilxon.xtha@gmail.com' THEN
@@ -157,14 +162,33 @@ BEGIN
         initialBalance := 0.00;
     END IF;
 
-    INSERT INTO public.profiles (id, email, username, role, balance)
+    -- Generate a random referral code
+    generated_code := substring(md5(random()::text) from 1 for 8);
+
+    -- Check if user signed up with a referral code in metadata
+    referrer_code := new.raw_user_meta_data->>'referred_by_code';
+    IF referrer_code IS NOT NULL THEN
+        SELECT id INTO referrer_id FROM public.profiles WHERE referral_code = referrer_code;
+    END IF;
+
+    INSERT INTO public.profiles (id, email, username, role, balance, referral_code, referred_by)
     VALUES (
         new.id,
         new.email,
         coalesce(new.raw_user_meta_data->>'username', split_part(new.email, '@', 1)),
         CASE WHEN isAdmin THEN 'Admin' ELSE 'User' END,
-        initialBalance
+        initialBalance,
+        generated_code,
+        referrer_id
     );
+
+    -- If a valid referrer was found, credit them 50 NPR
+    IF referrer_id IS NOT NULL THEN
+        UPDATE public.profiles SET balance = balance + 50.00 WHERE id = referrer_id;
+        INSERT INTO public.audit_logs (action, performed_by, target_user_id, details)
+        VALUES ('referral_bonus', new.id, referrer_id, jsonb_build_object('amount', 50.00, 'referred_email', new.email));
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

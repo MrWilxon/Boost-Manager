@@ -26,14 +26,14 @@ export default function PrivacyPolicy() {
               <Shield size={32} />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Privacy Policy</h1>
-              <p className="text-slate-500 dark:text-zinc-400 font-medium">Last updated: May 11, 2026</p>
+              <h1 className="text-3xl font-black text-slate-900 dark:text-main tracking-tight">Privacy Policy</h1>
+              <p className="text-slate-500 dark:text-muted font-medium">Last updated: May 11, 2026</p>
             </div>
           </div>
 
-          <div className="space-y-8 text-slate-600 dark:text-zinc-300 leading-relaxed">
+          <div className="space-y-8 text-slate-600 dark:text-muted leading-relaxed">
             <section>
-              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white mb-4">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-main mb-4">
                 <Eye size={20} className="text-indigo-500" /> Information We Collect
               </h2>
               <p className="mb-4">
@@ -47,7 +47,7 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white mb-4">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-main mb-4">
                 <Lock size={20} className="text-indigo-500" /> How We Use Your Data
               </h2>
               <p>We use the information we collect for the following purposes:</p>
@@ -60,7 +60,7 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white mb-4">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-main mb-4">
                 <Trash2 size={20} className="text-rose-500" /> Data Retention & Deletion
               </h2>
               <p className="mb-4">
@@ -83,7 +83,7 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-white mb-4">
+              <h2 className="flex items-center gap-2 text-xl font-bold text-slate-900 dark:text-main mb-4">
                 <Mail size={20} className="text-indigo-500" /> Contact Us
               </h2>
               <p>

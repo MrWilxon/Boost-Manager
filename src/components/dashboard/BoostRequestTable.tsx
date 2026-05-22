@@ -57,7 +57,7 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
       {/* Desktop Table */}
       <div className="hidden lg:block overflow-x-auto table-scrollbar">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-[#161719] text-zinc-500 border-b border-black/30">
+          <thead className="bg-[#161719] text-muted border-b border-black/30">
             <tr>
               <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em] text-center w-12">#</th>
               <th className="px-6 py-4 text-[10px] font-black uppercase tracking-[0.2em]">Campaign Info</th>
@@ -74,7 +74,7 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
               Array(5).fill(0).map((_, i) => <TableRowSkeleton key={i} />)
             ) : requests.length === 0 ? (
               <tr>
-                <td colSpan={profile?.role === "Admin" ? 8 : 7} className="px-6 py-16 text-center text-zinc-500 italic">
+                <td colSpan={profile?.role === "Admin" ? 8 : 7} className="px-6 py-16 text-center text-muted italic">
                   <div className="flex flex-col items-center gap-2 opacity-60">
                     <Search className="mb-2" size={32} />
                     <p className="text-base font-bold">No campaigns found</p>
@@ -88,14 +88,14 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                 return (
                   <tr key={req.id} className={`group hover:bg-white/5 transition-all duration-200 border-l-[3px] border-transparent ${stripeCls}`}>
                     <td className="px-6 py-5 text-center">
-                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg nm-inset text-zinc-500 font-black text-xs border border-black/25">
+                      <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg nm-inset text-muted font-black text-xs border border-black/25">
                         {(currentPage - 1) * itemsPerPage + idx + 1}
                       </span>
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex flex-col gap-1">
-                        <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">{req.date}</span>
-                        <a href={req.url} target="_blank" rel="noopener noreferrer" className="text-zinc-300 font-bold hover:text-white transition-colors flex items-center gap-1.5 text-sm">
+                        <span className="text-[9px] font-black text-muted uppercase tracking-widest">{req.date}</span>
+                        <a href={req.url} target="_blank" rel="noopener noreferrer" className="text-muted font-bold hover:text-main transition-colors flex items-center gap-1.5 text-sm">
                           <span className="truncate max-w-[150px] inline-block">{req.url.replace(/^https?:\/\//, '').slice(0, 30)}...</span>
                           <ExternalLink size={12} className="shrink-0 opacity-40" />
                         </a>
@@ -103,7 +103,7 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex flex-col gap-0.5">
-                        <span className="text-base font-black text-white tracking-tight">${req.budget || req.allocatedBudget || 0}</span>
+                        <span className="text-base font-black text-main tracking-tight">${req.budget || req.allocatedBudget || 0}</span>
                         {req.amountNpr && (
                           <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md self-start">
                             रू{req.amountNpr.toLocaleString()}
@@ -123,9 +123,9 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                             value={req.status}
                             onChange={(e) => onUpdateStatus(req.id, e.target.value as RequestStatus)}
                           >
-                            <option value="Pending" className="bg-[#1A1C1E]">Pending</option>
-                            <option value="Approved" className="bg-[#1A1C1E]">Approved</option>
-                            <option value="Rejected" className="bg-[#1A1C1E]">Rejected</option>
+                            <option value="Pending" className="bg-surface">Pending</option>
+                            <option value="Approved" className="bg-surface">Approved</option>
+                            <option value="Rejected" className="bg-surface">Rejected</option>
                           </select>
                           <ChevronDown size={10} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-current opacity-60 pointer-events-none" />
                         </div>
@@ -139,12 +139,12 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                       <div className="flex flex-col gap-1">
                         <div className="flex flex-wrap gap-1">
                           {req.platforms?.map((p: string) => (
-                            <span key={p} className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 nm-inset text-zinc-400 border border-black/20 rounded">
+                            <span key={p} className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 nm-inset text-muted border border-black/20 rounded">
                               {p}
                             </span>
                           ))}
                         </div>
-                        <span className="text-xs font-bold text-zinc-300 leading-tight">
+                        <span className="text-xs font-bold text-muted leading-tight">
                           {req.adGoal} {req.destination && <span className="text-indigo-400">/ {req.destination}</span>}
                         </span>
                       </div>
@@ -153,20 +153,20 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                       <td className="px-6 py-5">
                         <div className="flex flex-col">
                           <span className="text-sm font-black text-zinc-200 truncate max-w-[120px]">{req.username}</span>
-                          <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{req.userId?.slice(0, 8)}...</span>
+                          <span className="text-[9px] font-bold text-muted uppercase tracking-widest">{req.userId?.slice(0, 8)}...</span>
                         </div>
                       </td>
                     )}
                     <td className="px-6 py-5">
                       <div className="p-2.5 nm-inset rounded-xl max-w-[180px] overflow-hidden border border-black/25">
-                        <p className="text-xs font-medium text-zinc-400 truncate" title={req.remarks || "No remarks"}>
+                        <p className="text-xs font-medium text-muted truncate" title={req.remarks || "No remarks"}>
                           {req.remarks || "No remarks"}
                         </p>
                       </div>
                     </td>
                     <td className="px-6 py-5 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                        {profile?.role === "Admin" && req.status === "Approved" && onGenerateInvoice && (
+                        {req.status === "Approved" && onGenerateInvoice && (
                           <button onClick={() => onGenerateInvoice(req)} className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-emerald-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5" title="Invoice">
                             <Download size={14} />
                           </button>
@@ -196,7 +196,7 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
             <div key={i} className="h-28 nm-flat rounded-2xl animate-pulse border border-white/5" />
           ))
         ) : requests.length === 0 ? (
-          <p className="text-center py-12 text-zinc-500 italic text-sm">No campaigns found.</p>
+          <p className="text-center py-12 text-muted italic text-sm">No campaigns found.</p>
         ) : (
           requests.map((req) => {
             const stripeCls = stripeClassMap[req.status] || 'status-stripe-pending';
@@ -208,13 +208,13 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                 className={`nm-flat p-5 rounded-2xl border border-white/5 relative overflow-hidden ${stripeCls}`}
               >
                 <div className="flex justify-between items-center mb-3">
-                  <span className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">{req.date}</span>
+                  <span className="text-[9px] font-black text-muted uppercase tracking-widest">{req.date}</span>
                   <StatusBadge status={req.status} />
                 </div>
                 
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {req.platforms?.map((p: string) => (
-                    <span key={p} className="text-[8px] font-black uppercase tracking-widest px-2 py-1 nm-inset text-zinc-400 border border-black/20 rounded-md">
+                    <span key={p} className="text-[8px] font-black uppercase tracking-widest px-2 py-1 nm-inset text-muted border border-black/20 rounded-md">
                       {p}
                     </span>
                   ))}
@@ -232,8 +232,8 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
 
                 <div className="flex justify-between items-end pt-3 border-t border-black/20">
                   <div>
-                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest leading-none block mb-1">Cost</span>
-                    <span className="text-base font-black text-white">${req.budget || req.allocatedBudget || 0}</span>
+                    <span className="text-[8px] font-black text-muted uppercase tracking-widest leading-none block mb-1">Cost</span>
+                    <span className="text-base font-black text-main">${req.budget || req.allocatedBudget || 0}</span>
                     {req.amountNpr && (
                       <span className="text-[9px] font-black text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-md ml-2 inline-block">
                         रू{req.amountNpr.toLocaleString()}
@@ -261,19 +261,19 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
       {onPaginate && (
         <div className="px-6 py-4 border-t border-black/30 flex justify-between items-center bg-[#161719]">
           <div className="flex items-center gap-2.5">
-            <span className="text-xs font-black text-zinc-500 uppercase tracking-widest">Show</span>
+            <span className="text-xs font-black text-muted uppercase tracking-widest">Show</span>
             {onSetItemsPerPage && (
               <div className="relative">
                 <select
                   value={itemsPerPage}
                   onChange={(e) => onSetItemsPerPage(Number(e.target.value))}
-                  className="nm-inset text-zinc-300 font-black rounded-xl pl-3 pr-8 py-2 text-xs outline-none focus:border-indigo-500/30 cursor-pointer appearance-none border border-black/25"
+                  className="nm-inset text-muted font-black rounded-xl pl-3 pr-8 py-2 text-xs outline-none focus:border-indigo-500/30 cursor-pointer appearance-none border border-black/25"
                 >
-                  <option value={10} className="bg-[#1A1C1E]">10</option>
-                  <option value={50} className="bg-[#1A1C1E]">50</option>
-                  <option value={100} className="bg-[#1A1C1E]">100</option>
+                  <option value={10} className="bg-surface">10</option>
+                  <option value={50} className="bg-surface">50</option>
+                  <option value={100} className="bg-surface">100</option>
                 </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-[8px]">▼</div>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted pointer-events-none text-[8px]">▼</div>
               </div>
             )}
           </div>
@@ -281,15 +281,15 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
             <button 
               disabled={currentPage === 1} 
               onClick={() => onPaginate("prev")} 
-              className="w-9 h-9 rounded-xl nm-flat hover:nm-concave text-zinc-300 hover:text-white flex items-center justify-center disabled:opacity-30 transition-all duration-200 cursor-pointer active:scale-[0.95] disabled:pointer-events-none border border-white/5 active:nm-inset"
+              className="w-9 h-9 rounded-xl nm-flat hover:nm-concave text-muted hover:text-main flex items-center justify-center disabled:opacity-30 transition-all duration-200 cursor-pointer active:scale-[0.95] disabled:pointer-events-none border border-white/5 active:nm-inset"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-xs font-black text-white px-2.5">Page {currentPage}</span>
+            <span className="text-xs font-black text-main px-2.5">Page {currentPage}</span>
             <button 
               disabled={!hasMore} 
               onClick={() => onPaginate("next")} 
-              className="w-9 h-9 rounded-xl nm-flat hover:nm-concave text-zinc-300 hover:text-white flex items-center justify-center disabled:opacity-30 transition-all duration-200 cursor-pointer active:scale-[0.95] disabled:pointer-events-none border border-white/5 active:nm-inset"
+              className="w-9 h-9 rounded-xl nm-flat hover:nm-concave text-muted hover:text-main flex items-center justify-center disabled:opacity-30 transition-all duration-200 cursor-pointer active:scale-[0.95] disabled:pointer-events-none border border-white/5 active:nm-inset"
             >
               <ChevronRight size={16} />
             </button>

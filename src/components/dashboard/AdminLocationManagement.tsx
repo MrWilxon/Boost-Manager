@@ -96,13 +96,13 @@ export function AdminLocationManagement() {
 
   return (
     <div className="bg-white dark:bg-zinc-900/50 p-6 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm space-y-4">
-      <h3 className="font-bold text-slate-900 dark:text-zinc-100">Manage Default Locations</h3>
+      <h3 className="font-bold text-slate-900 dark:text-main">Manage Default Locations</h3>
       <div className="flex gap-2">
         <input 
           value={newLocation}
           onChange={(e) => setNewLocation(e.target.value)}
           placeholder="New Location"
-          className="flex-1 px-4 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-sm dark:text-zinc-100"
+          className="flex-1 px-4 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg text-sm dark:text-main"
         />
         <button onClick={handleAddLocation} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1">
           <Plus size={16} /> Add
@@ -112,7 +112,7 @@ export function AdminLocationManagement() {
         {locations.map(loc => (
           <div key={loc} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-zinc-800/50 rounded-lg text-sm text-slate-800 dark:text-zinc-200">
             {loc}
-            <button onClick={() => handleRemoveLocation(loc)} className="text-rose-500 hover:scale-110 active:scale-95 transition-all"><Trash2 size={16} /></button>
+            <button onClick={() => handleRemoveLocation(loc)} className="text-rose-500 hover:scale-110 active:scale-[0.98] active:nm-inset transition-all"><Trash2 size={16} /></button>
           </div>
         ))}
       </div>

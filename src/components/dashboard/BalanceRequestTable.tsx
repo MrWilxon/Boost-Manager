@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Search, X, CheckCircle2, XCircle, Wallet } from 'lucide-react';
+import { Search, X, CheckCircle2, XCircle, Wallet, Download, Trash2 } from 'lucide-react';
 import { BalanceRequest, UserProfile } from '../../types';
 
 interface BalanceRequestTableProps {
   requests: BalanceRequest[];
   profile: UserProfile | null;
-  onApprove: (id: string) => void;
-  onReject: (id: string) => void;
+  onApprove?: (id: string) => void;
+  onReject?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onGenerateInvoice?: (req: BalanceRequest) => void;
 }
 
 export const BalanceRequestTable: React.FC<BalanceRequestTableProps> = ({
@@ -14,11 +16,11 @@ export const BalanceRequestTable: React.FC<BalanceRequestTableProps> = ({
   profile,
   onApprove,
   onReject,
+  onDelete,
+  onGenerateInvoice,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
-
-  if (profile?.role !== 'Admin') return null;
 
   const filtered = requests.filter((r) => {
     const matchSearch = !searchQuery || (r.username || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -27,37 +29,37 @@ export const BalanceRequestTable: React.FC<BalanceRequestTableProps> = ({
   });
 
   return (
-    <section className="mt-8 bg-white dark:bg-zinc-900/50 rounded-2xl border border-slate-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-      <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <section className="mt-8 nm-flat rounded-3xl border border-white/5 overflow-hidden">
+      <div className="px-6 py-5 border-b border-black/30 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#161719]">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400">
+          <div className="p-2.5 nm-inset rounded-xl text-emerald-400 shadow-[inset_0_0_8px_rgba(16,185,129,0.1)] border border-emerald-500/20">
             <Wallet size={18} />
           </div>
-          <h3 className="font-black text-slate-800 dark:text-zinc-100 uppercase tracking-tight text-sm">
-            Balance Top-up Requests
+          <h3 className="font-black text-main uppercase tracking-widest text-sm">
+            Top-up History
           </h3>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={14} />
             <input 
               type="text"
-              placeholder="Search user..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs outline-none focus:ring-2 focus:ring-indigo-500/30 w-40"
+              className="w-full sm:w-48 pl-10 pr-4 py-3 nm-inset bg-surface border border-transparent focus:border-indigo-500/30 rounded-xl text-xs font-bold text-main placeholder-zinc-600 outline-none transition-all shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6)]"
             />
             {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
-                <X size={12} />
+              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-muted">
+                <X size={14} />
               </button>
             )}
           </div>
           <select 
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs outline-none"
+            className="px-4 py-3 nm-inset bg-surface border border-transparent focus:border-indigo-500/30 rounded-xl text-xs font-black text-muted outline-none cursor-pointer"
           >
             <option value="All">All</option>
             <option value="Pending">Pending</option>
@@ -67,59 +69,90 @@ export const BalanceRequestTable: React.FC<BalanceRequestTableProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto table-scrollbar">
         <table className="w-full text-left text-sm whitespace-nowrap">
-          <thead className="bg-slate-50/50 dark:bg-zinc-900/30 border-b border-slate-100 dark:border-zinc-800 text-[10px] font-black uppercase tracking-widest text-slate-500">
+          <thead className="bg-[#161719] border-b border-black/30 text-[10px] font-black uppercase tracking-widest text-muted">
             <tr>
-              <th className="px-6 py-4">User</th>
-              <th className="px-6 py-4">Date</th>
-              <th className="px-6 py-4">Amount</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-right">Action</th>
+              <th className="px-6 py-5">User</th>
+              <th className="px-6 py-5">Date</th>
+              <th className="px-6 py-5">Amount</th>
+              <th className="px-6 py-5">Status</th>
+              <th className="px-6 py-5 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-black/20">
             {filtered.map((req) => (
-              <tr key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/50 transition-colors">
-                <td className="px-6 py-4 font-bold text-slate-900 dark:text-zinc-100">{req.username}</td>
-                <td className="px-6 py-4 text-xs text-slate-500 dark:text-zinc-400">{req.date}</td>
-                <td className="px-6 py-4 text-indigo-600 dark:text-indigo-400 font-black">
-                  रू{req.amount?.toLocaleString()}
+              <tr key={req.id} className="hover:bg-[#1C1E21] transition-colors group">
+                <td className="px-6 py-5 font-bold text-main">
+                  <div className="flex flex-col">
+                    <span>{req.username}</span>
+                    {profile?.role === 'Admin' && <span className="text-[9px] text-muted font-mono mt-0.5">{req.user_id?.slice(0, 8)}</span>}
+                  </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                    req.status === 'Pending' ? 'bg-amber-100 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400' :
-                    req.status === 'Approved' ? 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400' :
-                    'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400'
+                <td className="px-6 py-5 text-xs font-bold text-muted">{new Date(req.created_at || Date.now()).toLocaleDateString()}</td>
+                <td className="px-6 py-5">
+                  <span className="text-emerald-400 font-black tracking-wide drop-shadow-[0_0_5px_rgba(16,185,129,0.2)]">
+                    रू{req.amount?.toLocaleString()}
+                  </span>
+                </td>
+                <td className="px-6 py-5">
+                  <span className={`px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest nm-inset ${
+                    req.status === 'Pending' ? 'text-amber-500 border border-amber-500/20' :
+                    req.status === 'Approved' ? 'text-emerald-500 border border-emerald-500/20' :
+                    'text-rose-500 border border-rose-500/20'
                   }`}>
                     {req.status}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-right">
-                  {req.status === "Pending" ? (
-                    <div className="flex justify-end gap-2">
+                <td className="px-6 py-5 text-right">
+                  <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                    {req.status === 'Approved' && onGenerateInvoice && (
                       <button 
-                        onClick={() => onApprove(req.id)} 
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black rounded-lg uppercase flex items-center gap-1.5 transition-all"
+                        onClick={() => onGenerateInvoice(req)} 
+                        className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-emerald-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5" 
+                        title="Download Receipt"
                       >
-                        <CheckCircle2 size={12} /> Approve
+                        <Download size={14} />
                       </button>
+                    )}
+                    {profile?.role === 'Admin' && req.status === "Pending" && (
+                      <>
+                        {onApprove && (
+                          <button 
+                            onClick={() => onApprove(req.id)} 
+                            className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-emerald-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5"
+                            title="Approve"
+                          >
+                            <CheckCircle2 size={14} />
+                          </button>
+                        )}
+                        {onReject && (
+                          <button 
+                            onClick={() => onReject(req.id)} 
+                            className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-rose-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5"
+                            title="Reject"
+                          >
+                            <XCircle size={14} />
+                          </button>
+                        )}
+                      </>
+                    )}
+                    {profile?.role === 'Admin' && onDelete && (
                       <button 
-                        onClick={() => onReject(req.id)} 
-                        className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black rounded-lg uppercase flex items-center gap-1.5 transition-all"
+                        onClick={() => onDelete(req.id)} 
+                        className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-rose-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5"
+                        title="Delete"
                       >
-                        <XCircle size={12} /> Reject
+                        <Trash2 size={14} />
                       </button>
-                    </div>
-                  ) : (
-                    <span className="text-[10px] text-slate-400 font-bold uppercase italic">Processed</span>
-                  )}
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-slate-400 italic text-sm">No balance requests found.</td>
+                <td colSpan={5} className="px-6 py-12 text-center text-muted italic text-sm font-bold">No balance requests found.</td>
               </tr>
             )}
           </tbody>

@@ -6,36 +6,68 @@
   
   --color-brand-primary: #6366f1;
   --color-brand-secondary: #4f46e5;
-  --color-surface: #1A1C1E;
-  --color-surface-raised: #1A1C1E;
-  --color-border: rgba(255,255,255,0.02);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-main: var(--text-main);
+  --color-muted: var(--text-muted);
 
   --breakpoint-xs: 480px;
 }
 
 @layer base {
+  :root {
+    /* Light Mode Variables */
+    --surface: #e0e5ec;
+    --surface-raised: #e8ecf2;
+    --surface-sunken: #d8dee6;
+    --nm-shadow-light: #ffffff;
+    --nm-shadow-dark: rgba(163, 177, 198, 0.6);
+    --nm-border: rgba(255, 255, 255, 0.5);
+    --text-main: #2d3748;
+    --text-muted: #718096;
+    --btn-glass: rgba(224, 229, 236, 0.85);
+  }
+
+  .dark {
+    /* Dark Mode Variables */
+    --surface: #1A1C1E;
+    --surface-raised: #1e2023;
+    --surface-sunken: #161719;
+    --nm-shadow-light: rgba(255, 255, 255, 0.02);
+    --nm-shadow-dark: rgba(0, 0, 0, 0.3);
+    --nm-border: rgba(255, 255, 255, 0.015);
+    --text-main: #f4f4f5; /* zinc-100 */
+    --text-muted: #a1a1aa; /* zinc-400 */
+    --btn-glass: rgba(26, 28, 30, 0.85);
+  }
+
   body {
-    @apply bg-[#1A1C1E] text-zinc-100 font-sans antialiased;
-    color-scheme: dark;
+    background-color: var(--surface);
+    color: var(--text-main);
+    @apply font-sans antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   h1, h2, h3, h4 {
-    @apply font-sans font-black tracking-tight text-zinc-100;
+    @apply font-sans font-black tracking-tight;
+    color: var(--text-main);
   }
 
   /* Custom scrollbar — thin & elegant */
   ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: var(--surface);
+    box-shadow: inset 2px 2px 5px var(--nm-shadow-dark);
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-zinc-700 rounded-full;
+    background: var(--nm-border);
+    border-radius: 4px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-zinc-600;
+    background: var(--text-muted);
   }
 
   /* Remove number input arrows */
@@ -49,79 +81,100 @@
 
 /* ─── Neumorphic Base Tactile Shadows ─── */
 @utility nm-flat {
-  background: #1A1C1E;
-  box-shadow: -6px -6px 16px rgba(255, 255, 255, 0.035), 6px 6px 16px rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.015);
+  background: var(--surface);
+  box-shadow: -6px -6px 16px var(--nm-shadow-light), 6px 6px 16px var(--nm-shadow-dark);
+  border: 1px solid var(--nm-border);
 }
 
 @utility nm-concave {
-  background: #1e2023; /* Lighter top shift for elevated puffy state */
-  box-shadow: -8px -8px 20px rgba(255, 255, 255, 0.045), 8px 8px 20px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.025);
+  background: var(--surface-raised);
+  box-shadow: -8px -8px 20px var(--nm-shadow-light), 8px 8px 20px var(--nm-shadow-dark);
+  border: 1px solid var(--nm-border);
 }
 
 @utility nm-inset {
-  background: #161719; /* Sunken recess */
-  box-shadow: inset -4px -4px 10px rgba(255, 255, 255, 0.02), inset 4px 4px 10px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: var(--surface-sunken);
+  box-shadow: inset -4px -4px 10px var(--nm-shadow-light), inset 4px 4px 10px var(--nm-shadow-dark);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* ─── Glassmorphism Card (Soft UI Overlay) ─── */
 .glass {
-  background: rgba(26, 28, 30, 0.85);
-  box-shadow: -6px -6px 16px rgba(255, 255, 255, 0.02), 6px 6px 20px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255,255,255,0.03);
+  background: var(--btn-glass);
+  box-shadow: -6px -6px 16px var(--nm-shadow-light), 6px 6px 20px var(--nm-shadow-dark);
+  border: 1px solid var(--nm-border);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 /* ─── Neumorphic Button System ─── */
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 text-white text-xs font-black uppercase tracking-widest transition-all duration-200 shadow-[-4px_-4px_12px_rgba(255,255,255,0.05),_4px_4px_12px_rgba(0,0,0,0.5)] hover:shadow-[-5px_-5px_15px_rgba(255,255,255,0.08),_5px_5px_15px_rgba(0,0,0,0.6)] active:scale-[0.97] cursor-pointer;
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600/90 hover:bg-indigo-600 text-white text-xs font-black uppercase tracking-widest transition-all duration-200 active:scale-[0.97] cursor-pointer;
+  box-shadow: -4px -4px 12px var(--nm-shadow-light), 4px 4px 12px var(--nm-shadow-dark);
   border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.btn-primary:hover {
+  box-shadow: -5px -5px 15px var(--nm-shadow-light), 5px 5px 15px var(--nm-shadow-dark);
 }
 
 .btn-primary:active {
   background: #4f46e5;
-  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.04), inset 3px 3px 8px rgba(0, 0, 0, 0.6);
+  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.1), inset 3px 3px 8px rgba(0, 0, 0, 0.3);
   border-color: rgba(99, 102, 241, 0.1);
 }
 
 .btn-ghost {
-  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl nm-flat text-zinc-300 hover:text-white text-xs font-black uppercase tracking-widest transition-all duration-200 hover:nm-concave active:scale-[0.97] cursor-pointer;
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl nm-flat hover:text-indigo-500 text-xs font-black uppercase tracking-widest transition-all duration-200 hover:nm-concave active:scale-[0.97] cursor-pointer;
+  color: var(--text-muted);
 }
 
 .btn-ghost:active {
-  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.02), inset 3px 3px 8px rgba(0, 0, 0, 0.6);
-  background: #161719;
+  box-shadow: inset -3px -3px 8px var(--nm-shadow-light), inset 3px 3px 8px var(--nm-shadow-dark);
+  background: var(--surface-sunken);
 }
 
 .btn-success {
-  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-emerald-400 text-xs font-black uppercase tracking-widest transition-all duration-200 shadow-[-4px_-4px_12px_rgba(255,255,255,0.04),_4px_4px_12px_rgba(0,0,0,0.5)] hover:shadow-[-5px_-5px_15px_rgba(255,255,255,0.06),_5px_5px_15px_rgba(0,0,0,0.6)] hover:text-emerald-300 active:scale-[0.97] cursor-pointer;
-  background: #1A1C1E;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-emerald-500 text-xs font-black uppercase tracking-widest transition-all duration-200 hover:text-emerald-400 active:scale-[0.97] cursor-pointer;
+  box-shadow: -4px -4px 12px var(--nm-shadow-light), 4px 4px 12px var(--nm-shadow-dark);
+}
+
+.btn-success:hover {
+  box-shadow: -5px -5px 15px var(--nm-shadow-light), 5px 5px 15px var(--nm-shadow-dark);
 }
 
 .btn-success:active {
-  background: #161719;
-  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.02), inset 3px 3px 8px rgba(0, 0, 0, 0.6);
-  border-color: rgba(16, 185, 129, 0.1);
+  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.05), inset 3px 3px 8px rgba(0, 0, 0, 0.3);
+  background: var(--surface);
+  border: 1px solid rgba(16, 185, 129, 0.2);
 }
 
 .btn-danger {
-  @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-rose-400 text-xs font-bold transition-all duration-200 shadow-[-4px_-4px_12px_rgba(255,255,255,0.04),_4px_4px_12px_rgba(0,0,0,0.5)] hover:shadow-[-5px_-5px_15px_rgba(255,255,255,0.06),_5px_5px_15px_rgba(0,0,0,0.6)] hover:text-rose-300 active:scale-[0.97] cursor-pointer;
-  background: #1A1C1E;
-  border: 1px solid rgba(244, 63, 94, 0.2);
+  @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-rose-500 text-xs font-black uppercase tracking-widest transition-all duration-200 hover:text-rose-400 active:scale-[0.97] cursor-pointer;
+  box-shadow: -4px -4px 12px var(--nm-shadow-light), 4px 4px 12px var(--nm-shadow-dark);
+}
+
+.btn-danger:hover {
+  box-shadow: -5px -5px 15px var(--nm-shadow-light), 5px 5px 15px var(--nm-shadow-dark);
 }
 
 .btn-danger:active {
-  background: #161719;
-  box-shadow: inset -3px -3px 8px rgba(255, 255, 255, 0.02), inset 3px 3px 8px rgba(0, 0, 0, 0.6);
-  border-color: rgba(244, 63, 94, 0.1);
+  box-shadow: inset -3px -3px 8px var(--nm-shadow-light), inset 3px 3px 8px var(--nm-shadow-dark);
+  background: var(--surface);
+  border: 1px solid rgba(244, 63, 94, 0.2);
 }
 
 .btn-icon {
-  @apply inline-flex items-center justify-center w-9 h-9 rounded-xl nm-flat text-zinc-400 hover:text-white transition-all duration-200 hover:nm-concave active:scale-[0.97] cursor-pointer;
+  @apply items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 active:scale-[0.97] cursor-pointer;
+  color: var(--text-muted);
+  background: var(--surface);
+  box-shadow: -4px -4px 12px var(--nm-shadow-light), 4px 4px 12px var(--nm-shadow-dark);
+  border: 1px solid var(--nm-border);
+}
+
+.btn-icon:hover {
+  color: var(--text-main);
+  box-shadow: -5px -5px 15px var(--nm-shadow-light), 5px 5px 15px var(--nm-shadow-dark);
 }
 
 .btn-icon:active {
@@ -144,9 +197,10 @@
 }
 
 /* ─── Table Scrollbar ─── */
-.table-scrollbar::-webkit-scrollbar { height: 4px; }
-.table-scrollbar::-webkit-scrollbar-track { background: transparent; }
-.table-scrollbar::-webkit-scrollbar-thumb { @apply bg-zinc-800 rounded-full; }
+.table-scrollbar::-webkit-scrollbar { height: 6px; }
+.table-scrollbar::-webkit-scrollbar-track { background: var(--surface); box-shadow: inset 2px 2px 5px var(--nm-shadow-dark); }
+.table-scrollbar::-webkit-scrollbar-thumb { background: var(--nm-border); border-radius: 4px; }
+.table-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* ─── Neumorphic Status Stripe Borders ─── */
 .status-stripe-approved { border-left: 3px solid #10b981; }

@@ -74,12 +74,12 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen bg-[#1A1C1E] flex selection:bg-indigo-500/30 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-surface flex selection:bg-indigo-500/30 font-sans relative overflow-hidden">
       {/* Universal Background Noise Overlay */}
       <div className="absolute inset-0 noise-overlay opacity-[0.03] pointer-events-none z-0"></div>
 
       {/* Left Panel - Visual/Brand (Hidden on Mobile) */}
-      <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-12 overflow-hidden border-r border-black/30 z-10 bg-[#1A1C1E]">
+      <div className="hidden lg:flex w-1/2 relative flex-col justify-between p-12 overflow-hidden border-r border-black/30 z-10 bg-surface">
          {/* Animated Background */}
          <div className="absolute inset-0 z-0">
             <div className="absolute top-[-10%] left-[-20%] w-[70%] h-[70%] rounded-full bg-rose-600/10 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '8s' }} />
@@ -88,9 +88,9 @@ export default function Signup() {
          
          <div className="relative z-10 flex items-center gap-3">
             <div className="bg-indigo-600/90 p-2.5 rounded-xl shadow-[-4px_-4px_10px_rgba(255,255,255,0.05),_4px_4px_10px_rgba(0,0,0,0.5)]">
-               <Rocket className="text-white w-5 h-5" />
+               <Rocket className="text-main w-5 h-5" />
             </div>
-            <span className="text-xl font-black tracking-tight text-white">BOOSTMGR</span>
+            <span className="text-xl font-black tracking-tight text-main">BOOSTMGR</span>
          </div>
          
          <div className="relative z-10 max-w-md">
@@ -98,7 +98,7 @@ export default function Signup() {
                initial={{ opacity: 0, y: 20 }}
                animate={{ opacity: 1, y: 0 }}
                transition={{ duration: 0.8, delay: 0.2 }}
-               className="text-4xl font-black text-white leading-[1.1] tracking-tight mb-6"
+               className="text-4xl font-black text-main leading-[1.1] tracking-tight mb-6"
             >
                The ultimate growth operating system.
             </motion.h2>
@@ -117,7 +117,7 @@ export default function Signup() {
                      <div className="w-5 h-5 rounded-full bg-rose-500/15 flex items-center justify-center text-rose-400">
                         <Target className="w-3.5 h-3.5" />
                      </div>
-                     <span className="text-zinc-400 font-medium text-sm">{feature}</span>
+                     <span className="text-muted font-medium text-sm">{feature}</span>
                   </div>
                ))}
             </motion.div>
@@ -129,7 +129,7 @@ export default function Signup() {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto z-10 bg-[#1A1C1E]">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative overflow-y-auto z-10 bg-surface">
         <motion.div 
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -139,12 +139,12 @@ export default function Signup() {
           <div className="mb-10 text-center lg:text-left">
             <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
                <div className="bg-indigo-600 p-2.5 rounded-xl shadow-[-4px_-4px_10px_rgba(255,255,255,0.05),_4px_4px_10px_rgba(0,0,0,0.5)]">
-                  <Rocket className="text-white w-5 h-5" />
+                  <Rocket className="text-main w-5 h-5" />
                </div>
-               <span className="text-xl font-black tracking-tight text-white">BOOSTMGR</span>
+               <span className="text-xl font-black tracking-tight text-main">BOOSTMGR</span>
             </div>
-            <h1 className="text-3xl font-black text-white tracking-tight mb-2">Request Access.</h1>
-            <p className="text-zinc-500 text-sm font-medium">Create your credentials to enter the system.</p>
+            <h1 className="text-3xl font-black text-main tracking-tight mb-2">Request Access.</h1>
+            <p className="text-muted text-sm font-medium">Create your credentials to enter the system.</p>
           </div>
 
           {error && (
@@ -161,13 +161,13 @@ export default function Signup() {
           <form onSubmit={handleSignup} className="space-y-5">
             
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Full Name</label>
+              <label className="text-[10px] font-black text-muted uppercase tracking-widest ml-1">Full Name</label>
               <div className="relative group">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-indigo-400 transition-colors" size={18} />
                 <input 
                   type="text"
                   required
-                  className="w-full pl-12 pr-4 py-4 nm-inset rounded-xl text-white outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder:text-zinc-600 focus:ring-4 focus:ring-indigo-500/5 text-sm"
+                  className="w-full pl-12 pr-4 py-4 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder-muted focus:ring-2 focus:ring-indigo-500/20 text-sm"
                   placeholder="John Doe"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -176,13 +176,13 @@ export default function Signup() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Email Address</label>
+              <label className="text-[10px] font-black text-muted uppercase tracking-widest ml-1">Email Address</label>
               <div className="relative group">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-indigo-400 transition-colors" size={18} />
                 <input 
                   type="email"
                   required
-                  className="w-full pl-12 pr-4 py-4 nm-inset rounded-xl text-white outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder:text-zinc-600 focus:ring-4 focus:ring-indigo-500/5 text-sm"
+                  className="w-full pl-12 pr-4 py-4 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder-muted focus:ring-2 focus:ring-indigo-500/20 text-sm"
                   placeholder="name@company.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -191,14 +191,14 @@ export default function Signup() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Mobile Number (Nepal)</label>
+              <label className="text-[10px] font-black text-muted uppercase tracking-widest ml-1">Mobile Number (Nepal)</label>
               <div className="relative group">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-indigo-400 transition-colors" size={18} />
                 <div className="absolute left-10 top-1/2 -translate-y-1/2 text-zinc-600 font-black text-xs">+977</div>
                 <input 
                   type="tel"
                   required
-                  className="w-full pl-20 pr-4 py-4 nm-inset rounded-xl text-white outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder:text-zinc-600 focus:ring-4 focus:ring-indigo-500/5 text-sm"
+                  className="w-full pl-20 pr-4 py-4 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder-muted focus:ring-2 focus:ring-indigo-500/20 text-sm"
                   placeholder="98XXXXXXXX"
                   value={mobile}
                   onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, ''))}
@@ -207,14 +207,14 @@ export default function Signup() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest ml-1">Password</label>
+              <label className="text-[10px] font-black text-muted uppercase tracking-widest ml-1">Password</label>
               <div className="relative group">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted group-focus-within:text-indigo-400 transition-colors" size={18} />
                 <input 
                   type={showPassword ? "text" : "password"}
                   required
                   minLength={6}
-                  className="w-full pl-12 pr-12 py-4 nm-inset rounded-xl text-white outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder:text-zinc-600 focus:ring-4 focus:ring-indigo-500/5 text-sm"
+                  className="w-full pl-12 pr-12 py-4 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-medium placeholder-muted focus:ring-2 focus:ring-indigo-500/20 text-sm"
                   placeholder="•••••••• (Min 6 chars)"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -222,7 +222,7 @@ export default function Signup() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted hover:text-main transition-colors"
                 >
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
@@ -244,23 +244,9 @@ export default function Signup() {
             </button>
           </form>
 
-          <div className="my-8 flex items-center gap-4">
-            <div className="h-px flex-1 bg-black/40 shadow-[0_1px_0_rgba(255,255,255,0.02)]"></div>
-            <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest">or continue with</span>
-            <div className="h-px flex-1 bg-black/40 shadow-[0_1px_0_rgba(255,255,255,0.02)]"></div>
-          </div>
 
-          <button 
-            onClick={handleGoogleSignup}
-            disabled={loading}
-            className="w-full py-4 nm-flat hover:nm-concave text-white rounded-xl font-bold transition-all flex items-center justify-center gap-3 disabled:opacity-50 text-sm active:scale-[0.98] active:shadow-[inset_-3px_-3px_8px_rgba(255,255,255,0.02),_inset_3px_3px_8px_rgba(0,0,0,0.6)] cursor-pointer"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5" alt="Google" />
-            Continue with Google
-          </button>
-
-          <p className="text-center text-zinc-500 text-xs font-medium mt-10">
-            Already verified? <Link href="/login" className="text-white font-bold hover:underline">Authenticate here</Link>
+          <p className="text-center text-muted text-xs font-medium mt-10">
+            Already verified? <Link href="/login" className="text-main font-bold hover:underline">Authenticate here</Link>
           </p>
         </motion.div>
       </div>

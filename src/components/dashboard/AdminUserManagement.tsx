@@ -149,7 +149,7 @@ export function AdminUserManagement() {
   const filteredUsers = users.filter((user) =>
     (user.username || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
     (user.email || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (user.phone || "").includes(searchQuery)
+    String(user.phone || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -157,23 +157,23 @@ export function AdminUserManagement() {
       {/* Header & Stats */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
-            <Users2 className="text-indigo-600" />
+          <h2 className="text-2xl font-black text-main flex items-center gap-3">
+            <Users2 className="text-indigo-500" />
             User Management
           </h2>
-          <p className="text-slate-500 dark:text-zinc-400 text-sm font-medium">
+          <p className="text-muted text-sm font-bold mt-1">
             Monitor and manage registered users and their balances
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
-            <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl text-indigo-600">
+          <div className="nm-inset rounded-2xl p-4 flex items-center gap-4 border border-white/5">
+            <div className="p-3 nm-flat rounded-xl text-indigo-500">
               <Users2 size={20} />
             </div>
             <div>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Users</p>
-              <p className="text-xl font-black text-slate-900 dark:text-white">{users.length}</p>
+              <p className="text-[10px] font-black text-muted uppercase tracking-widest">Total Users</p>
+              <p className="text-xl font-black text-main">{users.length}</p>
             </div>
           </div>
         </div>
@@ -181,7 +181,7 @@ export function AdminUserManagement() {
 
       {/* Search and Filters */}
       <div className="relative group">
-        <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-500 transition-colors">
+        <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none text-muted group-focus-within:text-indigo-500 transition-colors">
           <Search size={18} />
         </div>
         <input
@@ -189,16 +189,16 @@ export function AdminUserManagement() {
           placeholder="Search by username, email or phone..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-12 pr-6 py-4 bg-white dark:bg-zinc-950 border-2 border-slate-100 dark:border-zinc-800 focus:border-indigo-500 dark:focus:border-indigo-500 rounded-2xl outline-none text-sm font-bold transition-all shadow-sm group-hover:shadow-md"
+          className="w-full pl-12 pr-6 py-4 nm-inset text-main placeholder-zinc-600 rounded-2xl outline-none text-sm font-bold transition-all border border-transparent focus:border-indigo-500/30 focus:shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6),_inset_-4px_-4px_8px_rgba(255,255,255,0.02)]"
         />
       </div>
 
       {/* Users Table */}
-      <div className="bg-white dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
+      <div className="nm-flat rounded-3xl overflow-hidden border border-white/5">
+        <div className="overflow-x-auto table-scrollbar">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead>
-              <tr className="bg-slate-50/50 dark:bg-zinc-900/50 border-b border-slate-200 dark:border-zinc-800 font-bold text-[10px] uppercase tracking-widest text-slate-500">
+              <tr className="bg-[#161719] border-b border-black/30 font-black text-[10px] uppercase tracking-widest text-muted">
                 <th className="px-6 py-5">User Profile</th>
                 <th className="px-6 py-5">Contact Info</th>
                 <th className="px-6 py-5">Role & Status</th>
@@ -206,7 +206,7 @@ export function AdminUserManagement() {
                 <th className="px-6 py-5 text-right">Settings</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
+            <tbody className="divide-y divide-black/20">
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRowSkeleton key={i} />
@@ -215,10 +215,10 @@ export function AdminUserManagement() {
                 <tr>
                   <td colSpan={5} className="px-6 py-20 text-center">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="p-4 bg-slate-50 dark:bg-zinc-900 rounded-full text-slate-300">
+                      <div className="p-4 nm-inset rounded-full text-zinc-600">
                         <Users2 size={40} />
                       </div>
-                      <p className="text-slate-400 font-bold italic">No users found matching your search.</p>
+                      <p className="text-muted font-bold italic">No users found matching your search.</p>
                     </div>
                   </td>
                 </tr>
@@ -228,28 +228,28 @@ export function AdminUserManagement() {
                     key={user.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="hover:bg-slate-50/50 dark:hover:bg-zinc-900/30 transition-colors group"
+                    className="hover:bg-[#1C1E21] transition-colors group"
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-500/20 rounded-xl flex items-center justify-center text-indigo-600 font-black text-xs">
+                        <div className="w-10 h-10 nm-inset rounded-xl flex items-center justify-center text-indigo-500 font-black text-xs border border-white/5 shadow-[inset_2px_2px_4px_rgba(0,0,0,0.4)]">
                           {user.username?.slice(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-bold text-slate-900 dark:text-zinc-100">{user.username || 'Anonymous'}</p>
-                          <p className="text-[10px] font-mono text-slate-400">UID: {user.id.slice(0, 8)}...</p>
+                          <p className="font-bold text-main">{user.username || 'Anonymous'}</p>
+                          <p className="text-[10px] font-mono text-muted">UID: {user.id.slice(0, 8)}...</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
+                        <div className="flex items-center gap-2 text-muted">
                           <Mail size={12} />
-                          <span className="text-xs font-semibold">{user.email || 'No email'}</span>
+                          <span className="text-xs font-bold">{user.email || 'No email'}</span>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400">
+                        <div className="flex items-center gap-2 text-muted">
                           <Phone size={12} />
-                          <span className="text-xs font-semibold">{user.phone || 'No phone'}</span>
+                          <span className="text-xs font-bold">{user.phone || 'No phone'}</span>
                         </div>
                       </div>
                     </td>
@@ -257,37 +257,31 @@ export function AdminUserManagement() {
                       <select
                         value={user.role}
                         onChange={(e) => handleUpdateRole(user.id, e.target.value)}
-                        className={`text-[10px] font-black uppercase px-3 py-1 rounded-full border-2 transition-all outline-none cursor-pointer ${
+                        className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-full transition-all outline-none cursor-pointer nm-inset ${
                           user.role === 'Admin'
-                            ? 'bg-amber-50 dark:bg-amber-500/10 border-amber-500/30 text-amber-600'
-                            : 'bg-slate-50 dark:bg-zinc-800 border-slate-200 dark:border-zinc-700 text-slate-500'
+                            ? 'text-amber-500 border border-amber-500/20 shadow-[inset_0_0_8px_rgba(245,158,11,0.1)]'
+                            : 'text-muted border border-white/5'
                         }`}
                       >
-                        <option value="User">User</option>
-                        <option value="Admin">Admin</option>
+                        <option value="User" className="bg-surface text-muted">User</option>
+                        <option value="Admin" className="bg-surface text-amber-500">Admin</option>
                       </select>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/20 rounded-xl">
-                          <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest block leading-none mb-1">Current Balance</span>
-                          <span className="text-sm font-black text-emerald-700 dark:text-emerald-400">रू{user.balance?.toLocaleString() || 0}</span>
+                        <div className="px-4 py-2 nm-inset border border-emerald-500/10 rounded-xl shadow-[inset_0_0_10px_rgba(16,185,129,0.05)]">
+                          <span className="text-[9px] font-black text-emerald-500/70 uppercase tracking-widest block leading-none mb-1">Current Balance</span>
+                          <span className="text-sm font-black text-emerald-400 drop-shadow-[0_0_5px_rgba(16,185,129,0.3)]">रू{user.balance?.toLocaleString() || 0}</span>
                         </div>
-                        <button 
-                          onClick={() => openEditModal(user)}
-                          className="p-2 text-slate-400 hover:text-indigo-600 bg-slate-50 dark:bg-zinc-900 rounded-lg transition-all border border-slate-100 dark:border-zinc-800"
-                        >
-                          <Plus size={16} />
-                        </button>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => openEditModal(user)}
-                          className="p-2 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-indigo-600 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm transition-all"
+                          className="w-8 h-8 nm-flat rounded-lg flex items-center justify-center text-muted hover:text-indigo-400 hover:nm-concave active:scale-[0.98] active:nm-inset transition-all"
                         >
-                          <Edit size={16} />
+                          <Edit size={14} />
                         </button>
                         <button
                           onClick={() => {
@@ -297,16 +291,16 @@ export function AdminUserManagement() {
                             });
                             window.dispatchEvent(event);
                           }}
-                          className="p-2 bg-white dark:bg-zinc-900 text-slate-600 dark:text-zinc-400 hover:text-emerald-600 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm transition-all"
+                          className="w-8 h-8 nm-flat rounded-lg flex items-center justify-center text-muted hover:text-emerald-400 hover:nm-concave active:scale-[0.98] active:nm-inset transition-all"
                           title="View History"
                         >
-                          <History size={16} />
+                          <History size={14} />
                         </button>
                         <button
                           onClick={() => handleDeleteUser(user.id)}
-                          className="p-2 bg-white dark:bg-zinc-900 text-rose-500 hover:bg-rose-50 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm transition-all"
+                          className="w-8 h-8 nm-flat rounded-lg flex items-center justify-center text-muted hover:text-rose-500 hover:nm-concave active:scale-[0.98] active:nm-inset transition-all"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </td>
@@ -326,110 +320,110 @@ export function AdminUserManagement() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-md"
               onClick={() => setIsEditModalOpen(false)}
             />
             <motion.div
               initial={{ scale: 0.95, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
               exit={{ scale: 0.95, y: 20, opacity: 0 }}
-              className="relative w-full max-w-lg bg-white dark:bg-zinc-950 p-8 rounded-3xl shadow-2xl border border-slate-200 dark:border-zinc-800"
+              className="relative w-full max-w-lg nm-flat p-8 rounded-3xl border border-white/10"
             >
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h3 className="text-xl font-black text-slate-900 dark:text-white">Edit User Profile</h3>
-                  <p className="text-slate-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest mt-1">UID: {editingUser.id}</p>
+                  <h3 className="text-xl font-black text-main">Edit User Profile</h3>
+                  <p className="text-muted text-[10px] font-black uppercase tracking-widest mt-1">UID: {editingUser.id}</p>
                 </div>
                 <button
                   onClick={() => setIsEditModalOpen(false)}
-                  className="p-2 hover:bg-slate-100 dark:hover:bg-zinc-900 rounded-xl transition-all"
+                  className="w-8 h-8 nm-flat rounded-full flex items-center justify-center text-muted hover:text-rose-500 hover:nm-concave active:scale-[0.98] active:nm-inset transition-all"
                 >
-                  <X size={20} />
+                  <X size={16} />
                 </button>
               </div>
 
               <form onSubmit={handleEditSubmit} className="space-y-6">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Username</label>
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest px-1">Username</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 text-slate-400" size={14} />
+                      <User className="absolute left-4 top-3.5 text-muted" size={14} />
                       <input
                         type="text"
                         value={editingUser.username || ''}
                         onChange={(e) => setEditingUser({...editingUser, username: e.target.value})}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                        className="w-full pl-11 pr-4 py-3 nm-inset text-main rounded-xl text-sm font-bold outline-none border border-transparent focus:border-indigo-500/30"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Balance (NPR)</label>
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest px-1">Balance (NPR)</label>
                     <div className="relative">
-                      <Wallet className="absolute left-3 top-3 text-slate-400" size={14} />
+                      <Wallet className="absolute left-4 top-3.5 text-muted" size={14} />
                       <input
                         type="number"
                         value={editingUser.balance || 0}
                         onChange={(e) => setEditingUser({...editingUser, balance: Number(e.target.value)})}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm font-black outline-none focus:border-emerald-500"
+                        className="w-full pl-11 pr-4 py-3 nm-inset text-emerald-400 rounded-xl text-sm font-black outline-none border border-transparent focus:border-emerald-500/30"
                       />
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email Address</label>
+                  <label className="text-[10px] font-black text-muted uppercase tracking-widest px-1">Email Address</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-3 text-slate-400" size={14} />
+                    <Mail className="absolute left-4 top-3.5 text-muted" size={14} />
                     <input
                       type="email"
                       value={editingUser.email || ''}
                       onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                      className="w-full pl-11 pr-4 py-3 nm-inset text-main rounded-xl text-sm font-bold outline-none border border-transparent focus:border-indigo-500/30"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Phone Number</label>
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest px-1">Phone Number</label>
                     <div className="relative">
-                      <Phone className="absolute left-3 top-3 text-slate-400" size={14} />
+                      <Phone className="absolute left-4 top-3.5 text-muted" size={14} />
                       <input
                         type="text"
                         value={editingUser.phone || ''}
                         onChange={(e) => setEditingUser({...editingUser, phone: e.target.value})}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                        className="w-full pl-11 pr-4 py-3 nm-inset text-main rounded-xl text-sm font-bold outline-none border border-transparent focus:border-indigo-500/30"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Role</label>
+                    <label className="text-[10px] font-black text-muted uppercase tracking-widest px-1">Role</label>
                     <select
                       value={editingUser.role || 'User'}
                       onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm font-black outline-none focus:border-indigo-500"
+                      className="w-full px-4 py-3 nm-inset text-amber-500 rounded-xl text-sm font-black outline-none border border-transparent focus:border-amber-500/30"
                     >
-                      <option value="User">User</option>
-                      <option value="Admin">Admin</option>
+                      <option value="User" className="bg-surface text-muted">User</option>
+                      <option value="Admin" className="bg-surface text-amber-500">Admin</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Business Name</label>
+                  <label className="text-[10px] font-black text-muted uppercase tracking-widest px-1">Business Name</label>
                   <input
                     type="text"
                     value={editingUser.businessName || ''}
                     onChange={(e) => setEditingUser({...editingUser, businessName: e.target.value})}
-                    className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm font-bold outline-none focus:border-indigo-500"
+                    className="w-full px-4 py-3 nm-inset text-main rounded-xl text-sm font-bold outline-none border border-transparent focus:border-indigo-500/30"
                     placeholder="Enter business name..."
                   />
                 </div>
 
-                <div className="pt-4">
+                <div className="pt-6">
                   <button 
                     type="submit"
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                    className="w-full py-4 nm-flat rounded-2xl flex items-center justify-center gap-2 text-indigo-400 font-black tracking-widest uppercase hover:text-indigo-300 hover:nm-concave active:scale-[0.98] active:nm-inset transition-all"
                   >
                     <Save size={18} /> Save Changes
                   </button>

@@ -8,7 +8,7 @@ export const Footer = () => {
         <Rocket className="text-indigo-600" size={24} />
         <span className="text-xl font-black tracking-tight">Boost Manager</span>
       </div>
-      <p className="text-slate-400 dark:text-zinc-500 text-sm font-medium">
+      <p className="text-slate-400 dark:text-muted text-sm font-medium">
         © {new Date().getFullYear()} Boost Manager. All rights reserved.
       </p>
     </footer>

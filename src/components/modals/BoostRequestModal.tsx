@@ -230,17 +230,17 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-5xl max-h-[90vh] nm-flat rounded-3xl overflow-hidden flex flex-col text-zinc-100 border border-white/5"
+            className="relative w-full max-w-5xl max-h-[90vh] nm-flat rounded-3xl overflow-hidden flex flex-col text-main border border-white/5"
           >
             {/* Modal Header */}
             <div className="px-8 py-6 flex justify-between items-start border-b border-black/30 bg-[#161719]/40">
               <div>
-                <h3 className="text-xl font-black text-white tracking-tight">
+                <h3 className="text-xl font-black text-main tracking-tight">
                   {editingRequestId ? "Edit Boost Campaign" : "Deploy Boost Campaign"}
                 </h3>
-                <p className="text-xs font-medium text-zinc-500 mt-1">Configure your boost request with maximum targeting options.</p>
+                <p className="text-xs font-medium text-muted mt-1">Configure your boost request with maximum targeting options.</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:nm-flat hover:text-white rounded-xl transition-all duration-200 text-zinc-400 cursor-pointer">
+              <button onClick={onClose} className="p-2 hover:nm-flat hover:text-main rounded-xl transition-all duration-200 text-muted cursor-pointer">
                 <X size={18} />
               </button>
             </div>
@@ -257,11 +257,11 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                       <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
                         <Globe size={16} className="text-indigo-400" />
                       </div>
-                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-100">Campaign Details</h4>
+                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-main">Campaign Details</h4>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">URL TO BOOST</label>
+                      <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">URL TO BOOST</label>
                       <input 
                         type="url"
                         value={modalUrl}
@@ -272,14 +272,14 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">PLATFORM</label>
+                      <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">PLATFORM</label>
                       <div className="flex gap-3">
                         <button 
                           onClick={() => togglePlatform('All')}
                           className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
                             isAllPlatforms 
                               ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
-                              : 'nm-flat hover:nm-concave text-zinc-400 hover:text-white border border-white/5'
+                              : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
                           }`}
                         >
                           All
@@ -289,7 +289,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                           className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
                             !isAllPlatforms && hasPlatform('Facebook') 
                               ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
-                              : 'nm-flat hover:nm-concave text-zinc-400 hover:text-white border border-white/5'
+                              : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
                           }`}
                         >
                           Facebook
@@ -299,7 +299,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                           className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
                             !isAllPlatforms && hasPlatform('Instagram') 
                               ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
-                              : 'nm-flat hover:nm-concave text-zinc-400 hover:text-white border border-white/5'
+                              : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
                           }`}
                         >
                           Instagram
@@ -314,12 +314,12 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                       <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
                         <Users size={16} className="text-indigo-400" />
                       </div>
-                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-100">Filters & Targeting</h4>
+                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-main">Filters & Targeting</h4>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">LOCATION</label>
+                        <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">LOCATION</label>
                         <input 
                           type="text"
                           value={modalLocations[0]}
@@ -328,23 +328,23 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">GENDER</label>
+                        <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">GENDER</label>
                         <div className="relative">
                           <select 
                             value={modalGender}
                             onChange={(e) => setModalGender(e.target.value)}
                             className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
                           >
-                            <option className="bg-[#1A1C1E]">Both</option>
-                            <option className="bg-[#1A1C1E]">Male</option>
-                            <option className="bg-[#1A1C1E]">Female</option>
+                            <option className="bg-surface">Both</option>
+                            <option className="bg-surface">Male</option>
+                            <option className="bg-surface">Female</option>
                           </select>
-                          <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                          <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                         </div>
                       </div>
                       <div className="space-y-2">
                         <div className="space-y-1">
-                          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">AGE</label>
+                          <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">AGE</label>
                           {!isCustomAge ? (
                             <div className="relative">
                               <select 
@@ -352,15 +352,15 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                                 onChange={(e) => setModalAge(e.target.value)}
                                 className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
                               >
-                                <option className="bg-[#1A1C1E]">13-17</option>
-                                <option className="bg-[#1A1C1E]">18-65</option>
-                                <option className="bg-[#1A1C1E]">18-24</option>
-                                <option className="bg-[#1A1C1E]">25-34</option>
-                                <option className="bg-[#1A1C1E]">35-44</option>
-                                <option className="bg-[#1A1C1E]">45-54</option>
-                                <option className="bg-[#1A1C1E]">55-64</option>
+                                <option className="bg-surface">13-17</option>
+                                <option className="bg-surface">18-65</option>
+                                <option className="bg-surface">18-24</option>
+                                <option className="bg-surface">25-34</option>
+                                <option className="bg-surface">35-44</option>
+                                <option className="bg-surface">45-54</option>
+                                <option className="bg-surface">55-64</option>
                               </select>
-                              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                             </div>
                           ) : (
                             <input 
@@ -379,48 +379,48 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                               onChange={(e) => setIsCustomAge(e.target.checked)}
                               className="accent-indigo-500 cursor-pointer w-3.5 h-3.5 rounded border-white/10"
                             />
-                            <label htmlFor="customAgeToggle" className="text-[10px] font-bold text-zinc-400 cursor-pointer uppercase tracking-widest">Custom Age</label>
+                            <label htmlFor="customAgeToggle" className="text-[10px] font-bold text-muted cursor-pointer uppercase tracking-widest">Custom Age</label>
                           </div>
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">AD GOAL</label>
+                        <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">AD GOAL</label>
                         <div className="relative">
                           <select 
                             value={modalAdGoal}
                             onChange={(e) => setModalAdGoal(e.target.value)}
                             className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
                           >
-                            <option className="bg-[#1A1C1E]">Get Message</option>
-                            <option className="bg-[#1A1C1E]">Engagement</option>
-                            <option className="bg-[#1A1C1E]">Website Traffic</option>
-                            <option className="bg-[#1A1C1E]">Reach</option>
+                            <option className="bg-surface">Get Message</option>
+                            <option className="bg-surface">Engagement</option>
+                            <option className="bg-surface">Website Traffic</option>
+                            <option className="bg-surface">Reach</option>
                           </select>
-                          <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                          <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                         </div>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">DEST.</label>
+                      <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">DEST.</label>
                       <div className="relative">
                         <select 
                           value={modalDestination}
                           onChange={(e) => setModalDestination(e.target.value)}
                           className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
                         >
-                          <option className="bg-[#1A1C1E]">Messenger</option>
-                          <option className="bg-[#1A1C1E]">WhatsApp</option>
-                          <option className="bg-[#1A1C1E]">Instagram Direct</option>
-                          <option className="bg-[#1A1C1E]">Website</option>
+                          <option className="bg-surface">Messenger</option>
+                          <option className="bg-surface">WhatsApp</option>
+                          <option className="bg-surface">Instagram Direct</option>
+                          <option className="bg-surface">Website</option>
                         </select>
-                        <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
+                        <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                       </div>
                     </div>
 
                     <button 
                       onClick={() => setShowTextFormat(!showTextFormat)}
-                      className="flex items-center justify-center gap-2 px-4 py-2 nm-flat hover:nm-concave rounded-full text-xs font-bold text-zinc-400 hover:text-white transition-all w-fit cursor-pointer active:scale-[0.95]"
+                      className="flex items-center justify-center gap-2 px-4 py-2 nm-flat hover:nm-concave rounded-full text-xs font-bold text-muted hover:text-main transition-all w-fit cursor-pointer active:scale-[0.95]"
                     >
                       <Search size={14} /> {showTextFormat ? 'Hide Text Format' : 'Show Text Format'}
                     </button>
@@ -434,7 +434,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                           className="overflow-hidden"
                         >
                           <div className="p-4 nm-inset border border-black/20 rounded-2xl space-y-3 mt-4">
-                            <pre className="text-[11px] font-mono text-zinc-400 whitespace-pre-wrap">
+                            <pre className="text-[11px] font-mono text-muted whitespace-pre-wrap">
                               {generateTextFormat()}
                             </pre>
                             <div className="flex gap-3 pt-3 border-t border-black/20">
@@ -471,13 +471,13 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                       <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
                         <Wallet size={16} className="text-indigo-400" />
                       </div>
-                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-zinc-100">Budget & Payment</h4>
+                      <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-main">Budget & Payment</h4>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                          <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">TOTAL BUDGET ($)</label>
+                          <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">TOTAL BUDGET ($)</label>
                           <span className="text-[10px] font-bold text-rose-500">${dailyBudget}/d</span>
                         </div>
                         <input 
@@ -489,7 +489,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">DURATION (D)</label>
+                        <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">DURATION (D)</label>
                         <input 
                           type="number"
                           min="1"
@@ -529,18 +529,18 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
 
                     <div className="border-t border-black/25 pt-5 space-y-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">RATE</span>
-                        <span className="text-sm font-black text-white">रू{eligibility.effectiveRate}/$</span>
+                        <span className="text-[10px] font-black text-muted uppercase tracking-widest">RATE</span>
+                        <span className="text-sm font-black text-main">रू{eligibility.effectiveRate}/$</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">PAYABLE</span>
+                        <span className="text-[10px] font-black text-muted uppercase tracking-widest">PAYABLE</span>
                         <span className="text-4xl font-black text-rose-500 tracking-tighter">रू{eligibility.totalNpr.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between items-center pt-2">
                         <span className={`text-[10px] font-black uppercase tracking-widest ${eligibility.isEligible ? 'text-emerald-500' : 'text-rose-500'}`}>
                           {eligibility.isEligible ? 'ELIGIBLE' : 'INELIGIBLE'}
                         </span>
-                        <span className="text-xs font-medium text-zinc-400">
+                        <span className="text-xs font-medium text-muted">
                           Balance: रू{(profile?.balance || 0).toLocaleString()}
                         </span>
                       </div>
@@ -575,7 +575,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.15em] ml-1">NOTES</label>
+                    <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">NOTES</label>
                     <textarea 
                       value={modalNotes}
                       onChange={(e) => setModalNotes(e.target.value)}

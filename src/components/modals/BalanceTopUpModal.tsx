@@ -76,11 +76,11 @@ export const BalanceTopUpModal: React.FC<BalanceTopUpModalProps> = ({
                     <Wallet size={18} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-white tracking-tight">Load Capital</h3>
-                    <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Self Top-up Portal</p>
+                    <h3 className="text-lg font-black text-main tracking-tight">Load Capital</h3>
+                    <p className="text-[9px] font-black text-muted uppercase tracking-widest">Self Top-up Portal</p>
                   </div>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-zinc-400 hover:text-white">
+                <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-xl transition-colors text-muted hover:text-main">
                   <X size={18} />
                 </button>
               </div>
@@ -96,15 +96,15 @@ export const BalanceTopUpModal: React.FC<BalanceTopUpModalProps> = ({
                 </div>
 
                 <div className="bg-black/40 p-4 rounded-2xl border border-white/5 relative group">
-                   <p className="text-[9px] font-black text-zinc-500 uppercase tracking-[0.2em] mb-2">eSewa ID (Send To)</p>
+                   <p className="text-[9px] font-black text-muted uppercase tracking-[0.2em] mb-2">eSewa ID (Send To)</p>
                    <div className="flex items-center justify-between">
-                      <span className="text-base font-black text-white tracking-wider">9843398340</span>
+                      <span className="text-base font-black text-main tracking-wider">9843398340</span>
                       <button 
                         onClick={() => {
                           navigator.clipboard.writeText("9843398340");
                           onSuccess("Number copied to clipboard!");
                         }}
-                        className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-zinc-300 hover:text-white active:scale-95 transition-all"
+                        className="p-2 bg-white/5 hover:bg-white/10 border border-white/5 rounded-xl text-muted hover:text-main active:scale-[0.98] active:nm-inset transition-all"
                       >
                          <Copy size={14} />
                       </button>
@@ -112,14 +112,14 @@ export const BalanceTopUpModal: React.FC<BalanceTopUpModalProps> = ({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em] ml-1">Transfer Amount (NPR)</label>
+                  <label className="text-[10px] font-black text-muted uppercase tracking-[0.2em] ml-1">Transfer Amount (NPR)</label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 font-bold">रू</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted font-bold">रू</span>
                     <input
                       type="number"
                       value={loadAmount}
                       onChange={(e) => setLoadAmount(Number(e.target.value))}
-                      className="w-full pl-9 pr-4 py-3.5 bg-black/40 border border-white/5 rounded-2xl text-lg font-black text-white outline-none focus:border-indigo-500 transition-all border-l-2 focus:border-l-indigo-500 shadow-inner"
+                      className="w-full pl-9 pr-4 py-3.5 bg-black/40 border border-white/5 rounded-2xl text-lg font-black text-main outline-none focus:border-indigo-500 transition-all border-l-2 focus:border-l-indigo-500 shadow-inner"
                       placeholder="500"
                     />
                   </div>
@@ -140,7 +140,7 @@ export const BalanceTopUpModal: React.FC<BalanceTopUpModalProps> = ({
                   )}
                 </button>
 
-                <p className="text-[9px] text-center text-zinc-500 font-black uppercase tracking-widest">
+                <p className="text-[9px] text-center text-muted font-black uppercase tracking-widest">
                   Approval usually takes 5-15 minutes
                 </p>
               </div>

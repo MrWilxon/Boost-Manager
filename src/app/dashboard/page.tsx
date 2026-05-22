@@ -31,8 +31,10 @@ import { BoostRequestModal } from "@/src/components/modals/BoostRequestModal";
 import { BalanceTopUpModal } from "@/src/components/modals/BalanceTopUpModal";
 import { StatCard, StatusBadge } from "@/src/components/dashboard/shared/DashboardComponents";
 import { DeleteConfirmationModal } from "@/src/components/modals/DeleteConfirmationModal";
+import { OnboardingTour } from "@/src/components/dashboard/shared/OnboardingTour";
 import { useDashboardData } from "@/src/hooks/useDashboardData";
 import { BoostRequest, BalanceRequest, RequestStatus } from "@/src/types";
+import { generateBoostInvoice, generateTopupInvoice } from "@/src/utils/pdfGenerator";
 
 type TabType = "requests" | "analytics" | "users" | "balance";
 
@@ -214,9 +216,9 @@ export default function DashboardPage() {
 
   if (authLoading || !user || !profile) {
     return (
-      <div className="min-h-screen bg-[#1A1C1E] flex flex-col items-center justify-center gap-4" suppressHydrationWarning>
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 pb-24 lg:pb-8" suppressHydrationWarning>
         <RotateCw className="animate-spin text-indigo-500 w-10 h-10" />
-        <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.2em]">Initializing Engine...</p>
+        <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Initializing Engine...</p>
       </div>
     );
   }
@@ -231,7 +233,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#1A1C1E] text-zinc-100 font-sans selection:bg-indigo-500/30" suppressHydrationWarning>
+    <div className="min-h-screen bg-surface text-main font-sans selection:bg-indigo-500/30 pb-24 lg:pb-8" suppressHydrationWarning>
       {/* Background Glow */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px] mix-blend-screen" />
@@ -254,8 +256,8 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-white">Command Center</h1>
-            <p className="text-zinc-500 text-sm font-medium mt-1">
+            <h1 className="text-4xl font-black tracking-tight text-main">Command Center</h1>
+            <p className="text-muted text-sm font-medium mt-1">
               Active Session: <span className="text-indigo-400 font-bold">{profile.username}</span>
             </p>
           </div>
@@ -272,18 +274,20 @@ export default function DashboardPage() {
             )}
             <button
               onClick={() => setIsLoadMoneyModalOpen(true)}
-              className="btn-success px-5 py-3 rounded-xl flex items-center gap-2"
+              className="tour-step-balance btn-success px-5 py-3 rounded-xl flex items-center gap-2"
             >
-              <CreditCard size={14} /> Load Capital
+              <CreditCard size={14} /> Load Balance
             </button>
             <button
               onClick={() => { setEditingRequest(null); setIsModalOpen(true); }}
-              className="btn-primary px-5 py-3 rounded-xl flex items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
+              className="tour-step-campaign btn-primary px-5 py-3 rounded-xl flex items-center gap-2 shadow-[0_0_20px_rgba(99,102,241,0.3)]"
             >
-              <Plus size={14} /> Deploy Campaign
+              <Plus size={14} /> New Campaign
             </button>
           </div>
         </div>
+
+        <OnboardingTour />
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
@@ -315,13 +319,13 @@ export default function DashboardPage() {
               {/* Filters */}
               <div className="flex flex-col md:flex-row gap-4 nm-flat border border-white/5 rounded-2xl p-4">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={16} />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={16} />
                   <input
                     type="text"
                     placeholder="Search campaigns..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 nm-inset rounded-xl text-sm font-medium outline-none focus:border-indigo-500/30 focus:ring-4 focus:ring-indigo-500/5 transition-all text-white placeholder:text-zinc-600 border border-black/20"
+                    className="w-full pl-12 pr-4 py-3 nm-inset rounded-xl text-sm font-medium outline-none focus:border-indigo-500/30 focus:ring-4 focus:ring-indigo-500/5 transition-all text-main placeholder:text-zinc-600 border border-black/20"
                   />
                 </div>
                 
@@ -330,26 +334,26 @@ export default function DashboardPage() {
                     <select
                       value={platformFilter}
                       onChange={(e) => setPlatformFilter(e.target.value)}
-                      className="w-full px-4 py-3 nm-inset rounded-xl text-xs uppercase tracking-widest font-black outline-none text-zinc-300 focus:border-indigo-500/30 appearance-none cursor-pointer pr-10 border border-black/20"
+                      className="w-full px-4 py-3 nm-inset rounded-xl text-xs uppercase tracking-widest font-black outline-none text-muted focus:border-indigo-500/30 appearance-none cursor-pointer pr-10 border border-black/20"
                     >
-                      <option value="All" className="bg-[#1A1C1E]">All Networks</option>
-                      {allowedPlatforms.map(p => <option key={p} value={p} className="bg-[#1A1C1E]">{p}</option>)}
+                      <option value="All" className="bg-surface">All Networks</option>
+                      {allowedPlatforms.map(p => <option key={p} value={p} className="bg-surface">{p}</option>)}
                     </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-xs">▼</div>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none text-xs">▼</div>
                   </div>
 
                   <div className="relative min-w-[160px]">
                     <select
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
-                      className="w-full px-4 py-3 nm-inset rounded-xl text-xs uppercase tracking-widest font-black outline-none text-zinc-300 focus:border-indigo-500/30 appearance-none cursor-pointer pr-10 border border-black/20"
+                      className="w-full px-4 py-3 nm-inset rounded-xl text-xs uppercase tracking-widest font-black outline-none text-muted focus:border-indigo-500/30 appearance-none cursor-pointer pr-10 border border-black/20"
                     >
-                      <option value="All" className="bg-[#1A1C1E]">All Statuses</option>
-                      <option value="Pending" className="bg-[#1A1C1E]">Pending</option>
-                      <option value="Approved" className="bg-[#1A1C1E]">Approved</option>
-                      <option value="Rejected" className="bg-[#1A1C1E]">Rejected</option>
+                      <option value="All" className="bg-surface">All Statuses</option>
+                      <option value="Pending" className="bg-surface">Pending</option>
+                      <option value="Approved" className="bg-surface">Approved</option>
+                      <option value="Rejected" className="bg-surface">Rejected</option>
                     </select>
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none text-xs">▼</div>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none text-xs">▼</div>
                   </div>
                 </div>
               </div>
@@ -366,6 +370,7 @@ export default function DashboardPage() {
                 onStartEditing={(req) => { setEditingRequest(req); setIsModalOpen(true); }}
                 onPaginate={paginate}
                 onSetItemsPerPage={setItemsPerPage}
+                onGenerateInvoice={generateBoostInvoice}
               />
             </div>
           )}
@@ -378,6 +383,7 @@ export default function DashboardPage() {
               profile={profile}
               onApprove={handleApproveBalance}
               onReject={handleRejectBalance}
+              onGenerateInvoice={generateTopupInvoice}
             />
           )}
 
@@ -443,7 +449,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-6 right-6 z-[200] nm-flat border border-emerald-500/20 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-black text-[10px] uppercase tracking-widest"
+            className="fixed bottom-6 right-6 z-[200] nm-flat border border-emerald-500/20 text-main px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-black text-[10px] uppercase tracking-widest"
           >
             <CheckCircle2 className="text-emerald-500" size={18} />
             {notification}
