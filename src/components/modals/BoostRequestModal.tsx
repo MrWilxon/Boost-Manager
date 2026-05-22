@@ -16,6 +16,7 @@ interface BoostRequestModalProps {
   editingRequestId: string | null;
   onSuccess: (msg: string) => void;
   requests: any[];
+  allowedPlatforms?: string[];
 }
 
 export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
@@ -26,7 +27,8 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   rate,
   editingRequestId,
   onSuccess,
-  requests
+  requests,
+  allowedPlatforms = ["Facebook", "Instagram"]
 }) => {
   const [modalUrl, setModalUrl] = useState("");
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Facebook", "Instagram"]);
@@ -39,11 +41,11 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const [modalDuration, setModalDuration] = useState(5);
   const [modalNotes, setModalNotes] = useState("");
 
-  // Dynamic campaign types loaded from DB
   const [campaignTypes, setCampaignTypes] = useState<string[]>(["Get Message", "Engagement", "Website Traffic", "Reach"]);
 
   const [isCustomLocation, setIsCustomLocation] = useState(false);
   const [customLocation, setCustomLocation] = useState("");
+  const [savedCustomLocations, setSavedCustomLocations] = useState<string[]>([]);
   const [isCustomAge, setIsCustomAge] = useState(false);
   const [customAge, setCustomAge] = useState("");
   const [promoCode, setPromoCode] = useState("");
@@ -82,6 +84,14 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
           setModalAdGoal(prev => names.includes(prev) ? prev : names[0]);
         }
       });
+
+    // Load saved custom locations
+    const saved = localStorage.getItem('saved_custom_locations');
+    if (saved) {
+      try {
+        setSavedCustomLocations(JSON.parse(saved));
+      } catch (e) {}
+    }
   }, []);
 
   useEffect(() => {
@@ -90,21 +100,52 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
       if (req) {
         setModalUrl(req.url || "");
         setSelectedPlatforms(req.platforms || ["Facebook", "Instagram"]);
-        setModalLocations(req.location?.split(", ") || ["All Nepal"]);
+        
+        // Handle Location (Custom vs Default)
+        const loc = req.location || "All Nepal";
+        const defaultLocs = ["All Nepal", "Kathmandu", "Bhaktapur", "Lalitpur", "Pokhara", "Biratnagar", "Jhapa"];
+        const savedLocsStr = localStorage.getItem('saved_custom_locations');
+        let savedLocs: string[] = [];
+        try { if(savedLocsStr) savedLocs = JSON.parse(savedLocsStr); } catch(e){}
+        const allKnownLocs = [...defaultLocs, ...savedLocs];
+        
+        if (!allKnownLocs.includes(loc)) {
+          setIsCustomLocation(true);
+          setCustomLocation(loc);
+        } else {
+          setIsCustomLocation(false);
+          setModalLocations([loc]);
+        }
+
         setModalGender(req.gender || "Both");
-        setModalAge(req.age || "18-65");
+        
+        // Handle Age (Custom vs Default)
+        const age = req.age || "18-65";
+        const defaultAges = ["13-17", "18-65", "18-24", "25-34", "35-44", "45-54", "55-64"];
+        if (!defaultAges.includes(age)) {
+           setIsCustomAge(true);
+           setCustomAge(age);
+        } else {
+           setIsCustomAge(false);
+           setModalAge(age);
+        }
+
         setModalAdGoal(req.adGoal || "Get Message");
         setModalDestination(req.destination || "Messenger");
         setModalBudget(req.allocatedBudget || 5);
         setModalDuration(req.duration || 5);
-        setModalNotes(req.notes || "");
+        setModalNotes(req.remarks || "");
       }
     } else if (!editingRequestId && isOpen) {
        setModalUrl("");
        setSelectedPlatforms(["Facebook", "Instagram"]);
        setModalLocations(["All Nepal"]);
+       setIsCustomLocation(false);
+       setCustomLocation("");
        setModalGender("Both");
        setModalAge("18-65");
+       setIsCustomAge(false);
+       setCustomAge("");
        setModalAdGoal(campaignTypes[0] || "Get Message");
        setModalDestination("Messenger");
        setModalBudget(5);
@@ -117,6 +158,12 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     }
   }, [editingRequestId, isOpen, requests]);
 
+  useEffect(() => {
+    if (modalAdGoal === "Website Traffic") {
+      setModalDestination("Website");
+    }
+  }, [modalAdGoal]);
+
   const handleSubmit = async () => {
     if (!eligibility.isEligible) return;
 
@@ -127,15 +174,17 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
       user_id: user?.uid || user?.id,
       username: profile?.username || user?.email,
       url: modalUrl,
+      platform: selectedPlatforms.join(", "),
       platforms: selectedPlatforms,
-      location: modalLocations.join(", "),
+      location: isCustomLocation ? customLocation : modalLocations.join(", "),
       gender: modalGender,
       age: isCustomAge ? customAge : modalAge,
       ad_goal: modalAdGoal,
       destination: modalDestination,
+      budget: modalBudget,
       allocated_budget: modalBudget,
       duration: modalDuration,
-      notes: modalNotes,
+      remarks: modalNotes,
       amount_npr: eligibility.totalNpr,
       rate_used: eligibility.effectiveRate,
       status: "Pending" as const,
@@ -157,6 +206,18 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
         
         onSuccess("Boost request submitted!");
       }
+
+      // Save custom location if entered
+      if (isCustomLocation && customLocation.trim() !== "") {
+        const loc = customLocation.trim();
+        const defaultLocs = ["All Nepal", "Kathmandu", "Bhaktapur", "Lalitpur", "Pokhara", "Biratnagar", "Jhapa"];
+        if (!defaultLocs.includes(loc) && !savedCustomLocations.includes(loc)) {
+          const newSaved = [...savedCustomLocations, loc];
+          setSavedCustomLocations(newSaved);
+          localStorage.setItem('saved_custom_locations', JSON.stringify(newSaved));
+        }
+      }
+
       onClose();
     } catch (err: any) {
       console.error(err);
@@ -212,7 +273,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     }
   };
 
-  const isAllPlatforms = selectedPlatforms.includes('Facebook') && selectedPlatforms.includes('Instagram');
+  const isAllPlatforms = allowedPlatforms.length > 0 && allowedPlatforms.every(p => selectedPlatforms.includes(p));
 
   const dailyBudget = modalBudget && modalDuration ? (modalBudget / modalDuration).toFixed(2) : "0.00";
 
@@ -262,7 +323,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
             <div className="px-6 py-5 flex justify-between items-start border-b border-black/30 bg-[#161719]/40">
               <div>
                 <h3 className="text-xl font-black text-main tracking-tight">
-                  {editingRequestId ? "Edit Boost Campaign" : "Deploy Boost Campaign"}
+                  {editingRequestId ? "Edit Boost Campaign" : "Create Boost Campaign"}
                 </h3>
                 <p className="text-xs font-medium text-muted mt-1">Configure your boost request with maximum targeting options.</p>
               </div>
@@ -299,10 +360,13 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
 
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">PLATFORM</label>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button 
-                          onClick={() => togglePlatform('All')}
-                          className={`flex-1 py-2 px-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                          onClick={() => {
+                            if (isAllPlatforms) setSelectedPlatforms([]);
+                            else setSelectedPlatforms([...allowedPlatforms]);
+                          }}
+                          className={`px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
                             isAllPlatforms 
                               ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
                               : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
@@ -310,26 +374,19 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                         >
                           All
                         </button>
-                        <button 
-                          onClick={() => togglePlatform('Facebook')}
-                          className={`flex-1 py-2 px-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
-                            !isAllPlatforms && hasPlatform('Facebook') 
-                              ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
-                              : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
-                          }`}
-                        >
-                          Facebook
-                        </button>
-                        <button 
-                          onClick={() => togglePlatform('Instagram')}
-                          className={`flex-1 py-2 px-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
-                            !isAllPlatforms && hasPlatform('Instagram') 
-                              ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
-                              : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
-                          }`}
-                        >
-                          Instagram
-                        </button>
+                        {allowedPlatforms.map(p => (
+                          <button 
+                            key={p}
+                            onClick={() => togglePlatform(p)}
+                            className={`px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                              !isAllPlatforms && hasPlatform(p) 
+                                ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
+                                : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -345,13 +402,41 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">LOCATION</label>
-                        <input 
-                          type="text"
-                          value={modalLocations[0]}
-                          onChange={(e) => setModalLocations([e.target.value])}
-                          className="input-base border-l-2 border-l-indigo-500/40 border-black/25"
-                        />
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">LOCATION</label>
+                          {!isCustomLocation ? (
+                            <div className="relative">
+                              <select 
+                                value={modalLocations[0]}
+                                onChange={(e) => setModalLocations([e.target.value])}
+                                className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
+                              >
+                                {Array.from(new Set(["All Nepal", "Kathmandu", "Bhaktapur", "Lalitpur", "Pokhara", "Biratnagar", "Jhapa", ...savedCustomLocations])).map(loc => (
+                                  <option key={loc} value={loc} className="bg-surface">{loc}</option>
+                                ))}
+                              </select>
+                              <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                            </div>
+                          ) : (
+                            <input 
+                              type="text"
+                              value={customLocation}
+                              onChange={(e) => setCustomLocation(e.target.value)}
+                              placeholder="e.g. Dharan, Chitwan"
+                              className="input-base border-l-2 border-l-indigo-500/40 border-black/25"
+                            />
+                          )}
+                          <div className="flex items-center gap-2 pt-1.5 pl-1">
+                            <input 
+                              type="checkbox" 
+                              id="customLocationToggle"
+                              checked={isCustomLocation}
+                              onChange={(e) => setIsCustomLocation(e.target.checked)}
+                              className="accent-indigo-500 cursor-pointer w-3.5 h-3.5 rounded border-white/10"
+                            />
+                            <label htmlFor="customLocationToggle" className="text-[10px] font-bold text-muted cursor-pointer uppercase tracking-widest">Custom Location</label>
+                          </div>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">GENDER</label>

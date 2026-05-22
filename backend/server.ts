@@ -24,17 +24,17 @@ const supabaseAdmin = createClient(
 app.use(cors());
 app.use(express.json());
 
-// Global Rate Limiter: 100 requests per 15 minutes per IP
+// Global Rate Limiter: 5000 requests per 15 minutes per IP
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: 5000,
   message: { error: 'Too many requests from this IP, please try again later.' }
 });
 
-// Strict Rate Limiter: 10 requests per 15 minutes per IP (for sensitive endpoints)
+// Strict Rate Limiter: 50 requests per 15 minutes per IP (for sensitive endpoints)
 const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 50,
   message: { error: 'Strict limit exceeded. Try again later.' }
 });
 
@@ -164,8 +164,7 @@ app.get('/api/dashboard/balance-requests', authMiddleware, async (req, res) => {
     }
     
     query = query
-      .order('created_at', { ascending: false })
-      .limit(100);
+      .order('created_at', { ascending: false });
       
     const { data, error } = await query;
     if (error) throw error;
@@ -252,6 +251,33 @@ app.get('/api/settings/app', async (req, res) => {
       .select('*')
       .eq('id', 'global')
       .single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Settings: update global app settings ───────────────────────────────────────
+app.post('/api/settings/app', authMiddleware, async (req, res) => {
+  try {
+    const reqUser = (req as any).user;
+    if (reqUser.role !== 'Admin') {
+      return res.status(403).json({ error: 'Forbidden: Admins only' });
+    }
+    const { exchange_rate } = req.body;
+    
+    // Upsert the global settings row
+    const { data, error } = await supabaseAdmin
+      .from('app_settings')
+      .upsert({ 
+        id: 'global', 
+        exchange_rate: exchange_rate !== undefined ? exchange_rate : undefined,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'id' })
+      .select()
+      .single();
+
     if (error) throw error;
     res.json({ data });
   } catch (error: any) {

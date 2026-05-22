@@ -17,6 +17,7 @@ import {
   Settings,
   RotateCw,
   AlertTriangle,
+  Shield,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/src/services/supabase";
@@ -26,7 +27,6 @@ import { Analytics } from "@/src/components/dashboard/Analytics";
 import { AdminUserManagement } from "@/src/components/dashboard/AdminUserManagement";
 import { BoostRequestTable } from "@/src/components/dashboard/BoostRequestTable";
 import { BalanceRequestTable } from "@/src/components/dashboard/BalanceRequestTable";
-import { AdminSettings } from "@/src/components/dashboard/AdminSettings";
 import { BoostRequestModal } from "@/src/components/modals/BoostRequestModal";
 import { BalanceTopUpModal } from "@/src/components/modals/BalanceTopUpModal";
 import { StatCard, StatusBadge } from "@/src/components/dashboard/shared/DashboardComponents";
@@ -47,11 +47,11 @@ function DashboardLoader() {
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 pb-24 lg:pb-8" suppressHydrationWarning>
-      <div className="relative w-12 h-12">
-        <RotateCw className="animate-spin text-indigo-500 w-12 h-12" />
-        <div className="absolute inset-0 rounded-full bg-indigo-500/10 animate-ping" />
+      <div className="relative w-12 h-12" suppressHydrationWarning>
+        <RotateCw className="animate-spin text-indigo-500 w-12 h-12" suppressHydrationWarning />
+        <div className="absolute inset-0 rounded-full bg-indigo-500/10 animate-ping" suppressHydrationWarning />
       </div>
-      <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Initializing Engine...</p>
+      <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em]" suppressHydrationWarning>Initializing Engine...</p>
       {showHint && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -86,18 +86,23 @@ export default function DashboardPage() {
     setRequests,
     setBalanceRequests,
     refresh
-  } = useDashboardData(user, profile, itemsPerPage);
+  } = useDashboardData(user, profile, itemsPerPage, profile?.role === 'Admin' ? 'all' : 'personal');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadMoneyModalOpen, setIsLoadMoneyModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [editingRequest, setEditingRequest] = useState<BoostRequest | null>(null);
+  const [editingRequest, setEditingRequest] = useState<any | null>(null);
+  
+  // View Details Modal State
+  const [viewingRequest, setViewingRequest] = useState<any | null>(null);
+
+  // Status Filter State
+  const [filterStatus, setFilterStatus] = useState<string>("All");
+
   const [activeTab, setActiveTab] = useState<TabType>("requests");
 
   // Filtering
   const [searchQuery, setSearchQuery] = useState("");
   const [platformFilter, setPlatformFilter] = useState("All");
-  const [filterStatus, setFilterStatus] = useState<string>("All");
 
   const [notification, setNotification] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -124,11 +129,56 @@ export default function DashboardPage() {
       }
     };
     fetchRate();
+    
+    const savedWhatsApp = localStorage.getItem('whatsapp_number');
+    if (savedWhatsApp) {
+      setWhatsappNumber(savedWhatsApp);
+    }
   }, []);
+
+  const handleUpdateRate = async (newRate: number) => {
+    setRate(newRate);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token || '';
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      await fetch(`${apiUrl}/api/settings/app`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ exchange_rate: newRate })
+      });
+      showNotification("Dollar rate updated successfully.");
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleUpdateWhatsApp = (newNumber: string) => {
+    setWhatsappNumber(newNumber);
+    localStorage.setItem('whatsapp_number', newNumber);
+    // Dispatch an event so the WhatsApp button can hear the update
+    window.dispatchEvent(new Event('whatsapp_updated'));
+    showNotification("WhatsApp support number updated.");
+  };
 
   const [pageRoleInfo, setPageRoleInfo] = useState<string>("fb.com/admin_profile");
   const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>(["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]);
   const [adminAlertMessage, setAdminAlertMessage] = useState<string>("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem('allowed_platforms');
+    if (saved) {
+      try { setAllowedPlatforms(JSON.parse(saved)); } catch (e) {}
+    }
+  }, []);
+
+  const handleUpdateAllowedPlatforms = (platforms: string[]) => {
+    setAllowedPlatforms(platforms);
+    localStorage.setItem('allowed_platforms', JSON.stringify(platforms));
+  };
 
   // Auth guard
   useEffect(() => {
@@ -303,13 +353,13 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {profile.role === "Admin" && (
+            {profile?.role === 'Admin' && (
               <button
-                onClick={() => setIsSettingsModalOpen(true)}
-                className="btn-icon w-11 h-11"
-                title="System Configuration"
+                onClick={() => router.push('/admin')}
+                className="w-10 h-10 nm-flat hover:nm-concave rounded-xl flex items-center justify-center text-rose-500 transition-all active:scale-95"
+                title="Admin Console"
               >
-                <Settings size={18} />
+                <Shield size={18} />
               </button>
             )}
             <button
@@ -415,7 +465,7 @@ export default function DashboardPage() {
             </div>
           )}
 
-          {activeTab === "analytics" && <Analytics requests={requests} />}
+          {activeTab === "analytics" && <Analytics requests={requests} role={profile.role} />}
 
           {activeTab === "balance" && (
             <BalanceRequestTable
@@ -439,6 +489,7 @@ export default function DashboardPage() {
         editingRequestId={editingRequest?.id || null}
         onSuccess={showNotification}
         requests={requests}
+        allowedPlatforms={allowedPlatforms}
       />
 
       <BalanceTopUpModal
@@ -447,27 +498,6 @@ export default function DashboardPage() {
         profile={profile}
         user={user}
         onSuccess={showNotification}
-      />
-
-      <AdminSettings
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-        rate={rate}
-        whatsappNumber={whatsappNumber}
-        pageRoleInfo={pageRoleInfo}
-        allowedPlatforms={allowedPlatforms}
-        adminAlertMessage={adminAlertMessage}
-        invoiceConfig={{
-          companyName: "BOOST MANAGER",
-          companySubtitle: "Digital Solutions",
-          billToLocation: "KATHMANDU, NEPAL"
-        }}
-        onUpdateRate={setRate}
-        onUpdateWhatsApp={setWhatsappNumber}
-        onUpdatePageRole={setPageRoleInfo}
-        onUpdateAllowedPlatforms={setAllowedPlatforms}
-        onUpdateAlert={setAdminAlertMessage}
-        onUpdateInvoiceConfig={() => {}}
       />
 
       <DeleteConfirmationModal

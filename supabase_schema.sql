@@ -428,6 +428,7 @@ CREATE POLICY "Admins can manage campaign types" ON public.campaign_types FOR AL
 CREATE TABLE IF NOT EXISTS public.app_settings (
     id TEXT PRIMARY KEY,
     exchange_rate NUMERIC(12,2) NOT NULL DEFAULT 135,
+    whatsapp_number TEXT NOT NULL DEFAULT '+977-9843398340',
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now()
 );

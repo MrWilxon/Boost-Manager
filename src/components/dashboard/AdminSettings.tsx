@@ -43,6 +43,14 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
   const [localWhatsApp, setLocalWhatsApp] = useState(whatsappNumber);
   const [localAllowedPlatforms, setLocalAllowedPlatforms] = useState(allowedPlatforms);
 
+  React.useEffect(() => {
+    if (isOpen) {
+      setLocalRate(rate || 165);
+      setLocalWhatsApp(whatsappNumber);
+      setLocalAllowedPlatforms(allowedPlatforms);
+    }
+  }, [isOpen, rate, whatsappNumber, allowedPlatforms]);
+
   const [isDataSaver, setIsDataSaver] = useState(() => localStorage.getItem("data_saver") === "true");
 
   return (
@@ -109,7 +117,7 @@ export const AdminSettings: React.FC<AdminSettingsProps> = ({
                      </h5>
                      <div className="p-6 bg-slate-50 dark:bg-zinc-900/40 rounded-3xl border border-slate-100 dark:border-zinc-800 space-y-8">
                         <div>
-                           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Exchange Rate (NPR/$)</label>
+                           <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3">Dollar Rate (NPR/$)</label>
                            <div className="flex gap-2">
                               <input 
                                 type="number"

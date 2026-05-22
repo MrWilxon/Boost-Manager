@@ -4,12 +4,12 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { MessageCircle } from 'lucide-react';
 
 export const WhatsAppSupportButton = () => {
-  const adminPhone = "9779843398340";
   const message = "Hello, I need support with Boost Manager.";
 
   // Position state — default bottom-right
   const [pos, setPos] = useState({ x: 0, y: 0 });
   const [initialized, setInitialized] = useState(false);
+  const [adminPhone, setAdminPhone] = useState("9779843398340");
   const dragging = useRef(false);
   const hasDragged = useRef(false);
   const startPointer = useRef({ x: 0, y: 0 });
@@ -25,6 +25,15 @@ export const WhatsAppSupportButton = () => {
       y: window.innerHeight - btnSize - margin,
     });
     setInitialized(true);
+    
+    const fetchPhone = () => {
+      const saved = localStorage.getItem('whatsapp_number');
+      if (saved) setAdminPhone(saved.replace(/\D/g, ''));
+    };
+    
+    fetchPhone();
+    window.addEventListener('whatsapp_updated', fetchPhone);
+    return () => window.removeEventListener('whatsapp_updated', fetchPhone);
   }, []);
 
   // Clamp position inside viewport

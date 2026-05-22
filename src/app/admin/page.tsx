@@ -36,8 +36,8 @@ export default function AdminPage() {
 
   if (authLoading || (profile && profile.role !== 'Admin')) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+      <div className="min-h-screen bg-surface flex items-center justify-center" suppressHydrationWarning>
+        <div className="w-12 h-12 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" suppressHydrationWarning></div>
       </div>
     );
   }
@@ -57,7 +57,7 @@ export default function AdminPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface text-muted font-sans selection:bg-indigo-500/30">
+    <div className="min-h-screen bg-surface text-muted font-sans selection:bg-indigo-500/30" suppressHydrationWarning>
       <Navbar />
       
       <main className="max-w-7xl mx-auto px-4 md:px-8 pb-24">

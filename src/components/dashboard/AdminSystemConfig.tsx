@@ -4,9 +4,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Settings, DollarSign, Layers, Plus, Trash2, CheckCircle,
-  XCircle, Save, RefreshCw, AlertCircle, ToggleLeft, ToggleRight
+  XCircle, Save, RefreshCw, AlertCircle, ToggleLeft, ToggleRight,
+  MessageCircle, Zap
 } from 'lucide-react';
 import { supabase } from '../../services/supabase';
+import { ALL_PLATFORMS } from '../../constants';
 
 interface AppSettings {
   id: string;
@@ -33,6 +35,11 @@ export const AdminSystemConfig: React.FC = () => {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [exchangeRate, setExchangeRate] = useState<string>('');
   const [savingSettings, setSavingSettings] = useState(false);
+
+  // ── LocalStorage state ──────────────────────────────────────────────────────
+  const [whatsappNumber, setWhatsappNumber] = useState<string>('');
+  const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>([]);
+  const [isDataSaver, setIsDataSaver] = useState<boolean>(false);
 
   // ── Campaign Types state ─────────────────────────────────────────────────────
   const [campaignTypes, setCampaignTypes] = useState<CampaignType[]>([]);
@@ -84,6 +91,21 @@ export const AdminSystemConfig: React.FC = () => {
         .order('created_at', { ascending: true });
 
       setCampaignTypes(typesData || []);
+
+      // Load local storage items
+      const savedWhatsApp = localStorage.getItem('whatsapp_number');
+      if (savedWhatsApp) setWhatsappNumber(savedWhatsApp);
+      else setWhatsappNumber('+977-9843398340');
+
+      const savedPlatforms = localStorage.getItem('allowed_platforms');
+      if (savedPlatforms) {
+        try { setAllowedPlatforms(JSON.parse(savedPlatforms)); } catch (e) {}
+      } else {
+        setAllowedPlatforms(["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]);
+      }
+
+      setIsDataSaver(localStorage.getItem('data_saver') === 'true');
+
     } catch (err) {
       console.error('Error fetching system config:', err);
       showToast('error', 'Failed to load system configuration.');
@@ -117,6 +139,31 @@ export const AdminSystemConfig: React.FC = () => {
     } finally {
       setSavingSettings(false);
     }
+  };
+
+  // ── Save WhatsApp Number ──────────────────────────────────────────────────────
+  const handleSaveWhatsApp = () => {
+    if (!whatsappNumber.trim()) {
+      showToast('error', 'Please enter a valid WhatsApp number.');
+      return;
+    }
+    localStorage.setItem('whatsapp_number', whatsappNumber);
+    window.dispatchEvent(new Event('whatsapp_updated'));
+    showToast('success', 'WhatsApp support number updated!');
+  };
+
+  // ── Save Allowed Platforms ───────────────────────────────────────────────────
+  const handleSavePlatforms = () => {
+    localStorage.setItem('allowed_platforms', JSON.stringify(allowedPlatforms));
+    showToast('success', 'Active campaign platforms updated!');
+  };
+
+  // ── Toggle Data Saver ────────────────────────────────────────────────────────
+  const handleToggleDataSaver = () => {
+    const newValue = !isDataSaver;
+    setIsDataSaver(newValue);
+    localStorage.setItem('data_saver', String(newValue));
+    window.location.reload();
   };
 
   // ── Toggle campaign type ─────────────────────────────────────────────────────
@@ -229,29 +276,49 @@ export const AdminSystemConfig: React.FC = () => {
         </button>
       </div>
 
-      {/* ── App Settings Card ───────────────────────────────────────────────── */}
+      {/* ── Bandwidth Saver ─────────────────────────────────────────────────── */}
+      <section className="bg-orange-50 dark:bg-orange-500/5 p-6 rounded-[2rem] border border-orange-100 dark:border-orange-500/10 mb-8">
+        <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-orange-100 dark:bg-orange-500/20 rounded-2xl text-orange-600 dark:text-orange-400">
+                  <Zap size={24} />
+              </div>
+              <div>
+                  <h4 className="text-slate-900 dark:text-main font-bold">Bandwidth Saver Mode</h4>
+                  <p className="text-sm text-slate-500 dark:text-muted">Reduce cloud syncing for slower connections.</p>
+              </div>
+            </div>
+            <button
+              onClick={handleToggleDataSaver}
+              className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                isDataSaver ? 'bg-orange-500' : 'bg-slate-300 dark:bg-zinc-700'
+              }`}
+            >
+              <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${isDataSaver ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+        </div>
+      </section>
+
+      {/* ── System Rates & Support Card ─────────────────────────────────────── */}
       <div className="nm-flat rounded-2xl border border-white/5 overflow-hidden">
         {/* Card Header */}
         <div className="px-6 py-4 border-b border-black/30 bg-[#161719]/40 flex items-center gap-3">
           <div className="w-7 h-7 rounded-lg nm-inset flex items-center justify-center border border-amber-500/15">
-            <DollarSign size={15} className="text-amber-400" />
+            <Settings size={15} className="text-amber-400" />
           </div>
-          <h3 className="text-xs font-black text-main uppercase tracking-[0.15em]">Dollar Rate (NPR per $1)</h3>
+          <h3 className="text-xs font-black text-main uppercase tracking-[0.15em]">System Rates & Support</h3>
         </div>
 
         {/* Card Body */}
-        <div className="p-6">
-          <p className="text-xs font-medium text-muted mb-5 leading-relaxed">
-            Set the NPR conversion rate used to calculate campaign costs across the platform.
-            This rate applies to all new and edited boost requests.
-          </p>
-
-          <div className="flex gap-3 items-end">
-            <div className="flex-1 space-y-2">
-              <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">
-                Rate (रू per $1)
-              </label>
-              <div className="relative">
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          {/* Dollar Rate */}
+          <div>
+            <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+              <DollarSign size={14} className="text-amber-400" /> Dollar Rate (NPR per $1)
+            </h4>
+            <div className="flex gap-3 items-center">
+              <div className="relative flex-1">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400 font-black text-sm pointer-events-none">
                   रू
                 </span>
@@ -262,29 +329,100 @@ export const AdminSystemConfig: React.FC = () => {
                   value={exchangeRate}
                   onChange={e => setExchangeRate(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleSaveSettings()}
-                  className="w-full pl-10 pr-4 py-3.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-amber-500 transition-all font-black text-lg placeholder-muted focus:ring-2 focus:ring-amber-500/15"
+                  className="w-full pl-10 pr-4 py-3.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-amber-500 transition-all font-black text-sm placeholder-muted focus:ring-2 focus:ring-amber-500/15"
                   placeholder="135"
                 />
               </div>
-            </div>
 
-            <button
-              onClick={handleSaveSettings}
-              disabled={savingSettings}
-              className="flex items-center gap-2 px-6 py-3.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(245,158,11,0.25)] hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer active:scale-[0.97]"
-            >
-              {savingSettings
-                ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                : <Save size={14} />}
-              Save Rate
-            </button>
+              <button
+                onClick={handleSaveSettings}
+                disabled={savingSettings}
+                className="flex items-center gap-2 px-6 py-3.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(245,158,11,0.25)] hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer active:scale-[0.97]"
+              >
+                {savingSettings
+                  ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  : <Save size={14} />}
+                Set
+              </button>
+            </div>
+            {settings?.updated_at && (
+              <p className="text-[10px] font-bold text-zinc-600 mt-3 uppercase tracking-widest">
+                Last updated: {new Date(settings.updated_at).toLocaleString()}
+              </p>
+            )}
           </div>
 
-          {settings?.updated_at && (
-            <p className="text-[10px] font-bold text-zinc-600 mt-3 ml-1 uppercase tracking-widest">
-              Last updated: {new Date(settings.updated_at).toLocaleString()}
-            </p>
-          )}
+          {/* WhatsApp Support */}
+          <div>
+            <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+              <MessageCircle size={14} className="text-emerald-400" /> WhatsApp Support
+            </h4>
+            <div className="flex gap-3 items-center">
+              <input
+                type="text"
+                value={whatsappNumber}
+                onChange={e => setWhatsappNumber(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSaveWhatsApp()}
+                className="flex-1 px-4 py-3.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-emerald-500 transition-all font-black text-sm placeholder-muted focus:ring-2 focus:ring-emerald-500/15"
+                placeholder="+977-9843398340"
+              />
+
+              <button
+                onClick={handleSaveWhatsApp}
+                className="flex items-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] cursor-pointer active:scale-[0.97]"
+              >
+                <Save size={14} /> Set
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* ── Service Management Card (Allowed Platforms) ───────────────────────── */}
+      <div className="nm-flat rounded-2xl border border-white/5 overflow-hidden">
+        <div className="px-6 py-4 border-b border-black/30 bg-[#161719]/40 flex items-center gap-3">
+          <div className="w-7 h-7 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/15">
+            <AlertCircle size={15} className="text-indigo-400" />
+          </div>
+          <h3 className="text-xs font-black text-main uppercase tracking-[0.15em]">Service Management</h3>
+        </div>
+
+        <div className="p-6">
+          <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4">
+            Active Campaign Platforms
+          </h4>
+          <div className="flex flex-wrap gap-3">
+            {ALL_PLATFORMS.map(p => {
+              const isActive = allowedPlatforms.includes(p);
+              return (
+                <button
+                  key={p}
+                  onClick={() => {
+                    const next = isActive
+                      ? allowedPlatforms.filter(x => x !== p)
+                      : [...allowedPlatforms, p];
+                    setAllowedPlatforms(next);
+                  }}
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer active:scale-[0.96] ${
+                    isActive
+                      ? 'nm-flat text-indigo-400 border border-indigo-500/20'
+                      : 'nm-inset text-zinc-500 border border-black/20 hover:text-zinc-400'
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleSavePlatforms}
+              className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(99,102,241,0.2)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.3)] cursor-pointer active:scale-[0.97]"
+            >
+              <Save size={14} /> Update Platforms
+            </button>
+          </div>
         </div>
       </div>
 

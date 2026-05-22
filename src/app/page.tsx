@@ -60,19 +60,19 @@ export default function Home() {
           transition={{ duration: 0.8, ease: "circOut" }}
           className="flex justify-between items-center bg-zinc-900/50 backdrop-blur-2xl border border-white/5 rounded-full px-4 md:px-6 py-3 shadow-2xl shadow-black/50"
         >
-          <div className="flex items-center gap-2 md:gap-3 shrink-0">
-            <div className="bg-gradient-to-tr from-indigo-600 to-indigo-400 p-2 rounded-full shadow-lg shadow-indigo-900/50">
+          <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
+            <div className="bg-gradient-to-tr from-indigo-600 to-indigo-400 p-1.5 md:p-2 rounded-full shadow-lg shadow-indigo-900/50">
               <Rocket className="text-main w-4 h-4 md:w-5 md:h-5" />
             </div>
             <span className="text-sm md:text-base font-black tracking-tight text-main">
               BOOST<span className="text-muted"> MANAGER</span>
             </span>
           </div>
-          <div className="flex items-center gap-2 md:gap-4">
-            <Link href="/login" className="text-[10px] md:text-xs font-bold text-muted hover:text-main transition-colors uppercase tracking-[0.2em] px-2 md:px-4 py-2 whitespace-nowrap">
+          <div className="flex items-center gap-1 md:gap-4 shrink-0">
+            <Link href="/login" className="text-[9px] md:text-xs font-bold text-muted hover:text-main transition-colors uppercase tracking-[0.1em] md:tracking-[0.2em] px-1 md:px-4 py-2 whitespace-nowrap">
               Sign In
             </Link>
-            <Link href="/signup" className="bg-white hover:bg-zinc-200 text-black px-4 md:px-5 py-2 md:py-2.5 rounded-full text-[10px] md:text-xs font-black transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] uppercase tracking-[0.15em] md:tracking-[0.2em] flex items-center gap-1 md:gap-2 whitespace-nowrap">
+            <Link href="/signup" className="bg-white hover:bg-zinc-200 text-black px-3 md:px-5 py-1.5 md:py-2.5 rounded-full text-[9px] md:text-xs font-black transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] uppercase tracking-[0.1em] md:tracking-[0.2em] flex items-center gap-1 md:gap-2 whitespace-nowrap shrink-0">
               <span className="hidden xs:inline">Get Started</span>
               <span className="xs:hidden">Start</span>
               <ChevronRight size={12} className="md:w-[14px] md:h-[14px]" />
