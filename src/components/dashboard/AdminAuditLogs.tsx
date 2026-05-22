@@ -27,20 +27,16 @@ export const AdminAuditLogs = () => {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      // We join with profiles to get the performer's username
-      const { data, error } = await supabase
-        .from('audit_logs')
-        .select(`
-          *,
-          performer:profiles!audit_logs_performed_by_fkey (
-            username,
-            email
-          )
-        `)
-        .order('created_at', { ascending: false })
-        .limit(100);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Not authenticated');
 
-      if (error) throw error;
+      const res = await fetch(`${apiUrl}/api/admin/audit-logs`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { data } = await res.json();
       setLogs(data || []);
     } catch (err: any) {
       console.error("Error fetching audit logs:", err);
@@ -48,6 +44,8 @@ export const AdminAuditLogs = () => {
       setLoading(false);
     }
   };
+
+
 
   useEffect(() => {
     fetchLogs();

@@ -74,8 +74,25 @@ export default function DashboardPage() {
   }>({ isOpen: false, type: 'request', data: null });
 
   // Admin Settings State
-  const [rate, setRate] = useState<number>(165);
+  const [rate, setRate] = useState<number>(135); // default, will be overridden by app settings
   const [whatsappNumber, setWhatsappNumber] = useState<string>("+977-9843398340");
+
+  // Fetch dynamic exchange rate from backend (avoids RLS)
+  useEffect(() => {
+    const fetchRate = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const res = await fetch(`${apiUrl}/api/settings/app`);
+        if (!res.ok) throw new Error('Failed to fetch from backend');
+        const { data } = await res.json();
+        if (data && data.exchange_rate) setRate(Number(data.exchange_rate));
+      } catch (error) {
+        console.error('Failed to fetch exchange rate', error);
+      }
+    };
+    fetchRate();
+  }, []);
+
   const [pageRoleInfo, setPageRoleInfo] = useState<string>("fb.com/admin_profile");
   const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>(["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]);
   const [adminAlertMessage, setAdminAlertMessage] = useState<string>("");
@@ -212,8 +229,6 @@ export default function DashboardPage() {
     });
   }, [requests, searchQuery, platformFilter, filterStatus]);
 
-  const pendingBalanceCount = useMemo(() => balanceRequests.filter(r => r.status === 'Pending').length, [balanceRequests]);
-
   if (authLoading || !user || !profile) {
     return (
       <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 pb-24 lg:pb-8" suppressHydrationWarning>
@@ -226,10 +241,7 @@ export default function DashboardPage() {
   const tabs = [
     { id: 'requests' as TabType, label: 'Campaigns' },
     { id: 'analytics' as TabType, label: 'Analytics' },
-    ...(profile.role === 'Admin' ? [
-      { id: 'balance' as TabType, label: `Top-ups${pendingBalanceCount ? ` (${pendingBalanceCount})` : ''}` },
-      { id: 'users' as TabType, label: 'Users' },
-    ] : []),
+    { id: 'balance' as TabType, label: 'Top-ups' },
   ];
 
   return (
@@ -329,8 +341,8 @@ export default function DashboardPage() {
                   />
                 </div>
                 
-                <div className="flex gap-3 shrink-0">
-                  <div className="relative min-w-[160px]">
+                <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                  <div className="relative w-full sm:min-w-[160px]">
                     <select
                       value={platformFilter}
                       onChange={(e) => setPlatformFilter(e.target.value)}
@@ -342,7 +354,7 @@ export default function DashboardPage() {
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-muted pointer-events-none text-xs">▼</div>
                   </div>
 
-                  <div className="relative min-w-[160px]">
+                  <div className="relative w-full sm:min-w-[160px]">
                     <select
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
@@ -377,7 +389,7 @@ export default function DashboardPage() {
 
           {activeTab === "analytics" && <Analytics requests={requests} />}
 
-          {activeTab === "balance" && profile.role === "Admin" && (
+          {activeTab === "balance" && (
             <BalanceRequestTable
               requests={balanceRequests}
               profile={profile}
@@ -385,10 +397,6 @@ export default function DashboardPage() {
               onReject={handleRejectBalance}
               onGenerateInvoice={generateTopupInvoice}
             />
-          )}
-
-          {activeTab === "users" && profile.role === "Admin" && (
-            <AdminUserManagement />
           )}
         </div>
       </main>

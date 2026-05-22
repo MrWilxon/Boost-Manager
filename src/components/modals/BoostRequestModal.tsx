@@ -29,7 +29,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   requests
 }) => {
   const [modalUrl, setModalUrl] = useState("");
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Facebook", "Instagram"]); // Default to both based on screenshot 'All'
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Facebook", "Instagram"]);
   const [modalLocations, setModalLocations] = useState<string[]>(["All Nepal"]);
   const [modalGender, setModalGender] = useState("Both");
   const [modalAge, setModalAge] = useState("18-65");
@@ -38,7 +38,10 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const [modalBudget, setModalBudget] = useState(5);
   const [modalDuration, setModalDuration] = useState(5);
   const [modalNotes, setModalNotes] = useState("");
-  
+
+  // Dynamic campaign types loaded from DB
+  const [campaignTypes, setCampaignTypes] = useState<string[]>(["Get Message", "Engagement", "Website Traffic", "Reach"]);
+
   const [isCustomLocation, setIsCustomLocation] = useState(false);
   const [customLocation, setCustomLocation] = useState("");
   const [isCustomAge, setIsCustomAge] = useState(false);
@@ -64,6 +67,23 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     profile
   });
 
+  // Load active campaign types from DB once on mount
+  useEffect(() => {
+    supabase
+      .from('campaign_types')
+      .select('name')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          const names = data.map((t: { name: string }) => t.name);
+          setCampaignTypes(names);
+          // Update default ad goal if current value is not in the list
+          setModalAdGoal(prev => names.includes(prev) ? prev : names[0]);
+        }
+      });
+  }, []);
+
   useEffect(() => {
     if (editingRequestId && isOpen) {
       const req = requests.find(r => r.id === editingRequestId);
@@ -85,7 +105,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
        setModalLocations(["All Nepal"]);
        setModalGender("Both");
        setModalAge("18-65");
-       setModalAdGoal("Get Message");
+       setModalAdGoal(campaignTypes[0] || "Get Message");
        setModalDestination("Messenger");
        setModalBudget(5);
        setModalDuration(5);
@@ -179,8 +199,14 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
       setSelectedPlatforms(['Facebook', 'Instagram']);
       return;
     }
+    if (isAllPlatforms) {
+      setSelectedPlatforms([p]);
+      return;
+    }
     if (selectedPlatforms.includes(p)) {
-      setSelectedPlatforms(prev => prev.filter(x => x !== p));
+      if (selectedPlatforms.length > 1) {
+        setSelectedPlatforms(prev => prev.filter(x => x !== p));
+      }
     } else {
       setSelectedPlatforms(prev => [...prev, p]);
     }
@@ -233,7 +259,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
             className="relative w-full max-w-5xl max-h-[90vh] nm-flat rounded-3xl overflow-hidden flex flex-col text-main border border-white/5"
           >
             {/* Modal Header */}
-            <div className="px-8 py-6 flex justify-between items-start border-b border-black/30 bg-[#161719]/40">
+            <div className="px-6 py-5 flex justify-between items-start border-b border-black/30 bg-[#161719]/40">
               <div>
                 <h3 className="text-xl font-black text-main tracking-tight">
                   {editingRequestId ? "Edit Boost Campaign" : "Deploy Boost Campaign"}
@@ -245,14 +271,14 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-8 py-8 custom-scrollbar">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="flex-1 overflow-y-auto px-6 py-6 custom-scrollbar">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* LEFT COLUMN */}
-                <div className="space-y-8">
+                <div className="space-y-6">
                   
                   {/* Campaign Details Section */}
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
                         <Globe size={16} className="text-indigo-400" />
@@ -273,10 +299,10 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
 
                     <div className="space-y-2">
                       <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">PLATFORM</label>
-                      <div className="flex gap-3">
+                      <div className="flex gap-2">
                         <button 
                           onClick={() => togglePlatform('All')}
-                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                          className={`flex-1 py-2 px-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
                             isAllPlatforms 
                               ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
                               : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
@@ -286,7 +312,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                         </button>
                         <button 
                           onClick={() => togglePlatform('Facebook')}
-                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                          className={`flex-1 py-2 px-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
                             !isAllPlatforms && hasPlatform('Facebook') 
                               ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
                               : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
@@ -296,7 +322,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                         </button>
                         <button 
                           onClick={() => togglePlatform('Instagram')}
-                          className={`flex-1 py-3 px-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                          className={`flex-1 py-2 px-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
                             !isAllPlatforms && hasPlatform('Instagram') 
                               ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
                               : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
@@ -309,7 +335,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                   </div>
 
                   {/* Filters & Targeting Section */}
-                  <div className="space-y-5">
+                  <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
                         <Users size={16} className="text-indigo-400" />
@@ -317,7 +343,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                       <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-main">Filters & Targeting</h4>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">LOCATION</label>
                         <input 
@@ -386,15 +412,14 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                       <div className="space-y-2">
                         <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">AD GOAL</label>
                         <div className="relative">
-                          <select 
+                          <select
                             value={modalAdGoal}
                             onChange={(e) => setModalAdGoal(e.target.value)}
                             className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
                           >
-                            <option className="bg-surface">Get Message</option>
-                            <option className="bg-surface">Engagement</option>
-                            <option className="bg-surface">Website Traffic</option>
-                            <option className="bg-surface">Reach</option>
+                            {campaignTypes.map(type => (
+                              <option key={type} value={type} className="bg-surface">{type}</option>
+                            ))}
                           </select>
                           <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                         </div>
@@ -463,10 +488,10 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                 </div>
 
                 {/* RIGHT COLUMN */}
-                <div className="space-y-6">
+                <div className="space-y-4">
                   
                   {/* Budget & Payment Box */}
-                  <div className="nm-flat border border-white/5 rounded-3xl p-6 space-y-6">
+                  <div className="nm-flat border border-white/5 rounded-3xl p-5 space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/10">
                         <Wallet size={16} className="text-indigo-400" />
@@ -474,7 +499,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                       <h4 className="text-[11px] font-black uppercase tracking-[0.15em] text-main">Budget & Payment</h4>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                           <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">TOTAL BUDGET ($)</label>

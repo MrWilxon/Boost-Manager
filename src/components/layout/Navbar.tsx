@@ -4,18 +4,20 @@ import Link from 'next/link';
 import { LogOut, User as UserIcon, Rocket, Sun, Moon, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useRouter } from 'next/navigation';
 
 interface NavbarProps {
   onLoadMoney?: () => void;
   onSettings?: () => void;
 }
 
-export const Navbar = ({ onLoadMoney, onSettings }: NavbarProps) => {
+const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
+  const router = useRouter();
   const { profile, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  return (
+    return (
     <header className="sticky top-4 z-50 mx-4 md:mx-8 mb-6 nm-flat px-4 md:px-8 py-3.5 rounded-2xl transition-all duration-300">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/dashboard" className="flex items-center gap-3 group">
@@ -81,7 +83,7 @@ export const Navbar = ({ onLoadMoney, onSettings }: NavbarProps) => {
             </Link>
 
             <button 
-              onClick={() => signOut()}
+              onClick={() => { router.push('/logout'); }}
               className="hidden md:flex items-center justify-center w-9 h-9 rounded-xl bg-surface text-rose-400 hover:text-rose-300 transition-all duration-200 active:scale-[0.97] cursor-pointer shadow-[-4px_-4px_12px_rgba(255,255,255,0.04),_4px_4px_12px_rgba(0,0,0,0.5)] hover:shadow-[-5px_-5px_15px_rgba(255,255,255,0.06),_5px_5px_15px_rgba(0,0,0,0.6)] border border-rose-500/20 active:shadow-[inset_-3px_-3px_8px_rgba(255,255,255,0.02),_inset_3px_3px_8px_rgba(0,0,0,0.6)]"
               title="Sign Out"
             >
@@ -155,3 +157,6 @@ export const Navbar = ({ onLoadMoney, onSettings }: NavbarProps) => {
     </header>
   );
 };
+
+export { Navbar };
+export default Navbar;

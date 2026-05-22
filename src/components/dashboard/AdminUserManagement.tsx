@@ -34,12 +34,16 @@ export function AdminUserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('Not authenticated');
 
-      if (error) throw error;
+      const res = await fetch(`${apiUrl}/api/admin/profiles`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const { data } = await res.json();
 
       const mappedUsers = (data || []).map((u: any) => ({
         id: u.id,
@@ -59,6 +63,8 @@ export function AdminUserManagement() {
       setLoading(false);
     }
   };
+
+
 
   useEffect(() => {
     fetchUsers();

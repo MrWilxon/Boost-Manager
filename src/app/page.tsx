@@ -117,11 +117,11 @@ export default function Home() {
           transition={{ duration: 0.8, delay: 0.3, ease: "circOut" }}
         >
           <Link href="/signup" className="group relative flex items-center justify-center gap-3 bg-white text-black px-10 py-5 rounded-full text-sm font-black transition-all hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.15)] uppercase tracking-widest overflow-hidden">
-            <span className="relative z-10 flex items-center gap-3">Deploy Campaign <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></span>
+            <span className="relative z-10 flex items-center gap-3">Signup <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" /></span>
             <div className="absolute inset-0 bg-gradient-to-r from-zinc-200 to-white opacity-0 group-hover:opacity-100 transition-opacity"></div>
           </Link>
           <Link href="/login" className="flex items-center justify-center gap-3 bg-zinc-900/50 backdrop-blur-xl border border-white/5 hover:bg-zinc-800 text-main px-10 py-5 rounded-full text-sm font-black transition-all hover:border-white/20 uppercase tracking-widest">
-            View Dashboard
+            Login
           </Link>
         </motion.div>
 
@@ -261,7 +261,7 @@ export default function Home() {
           <div className="bg-indigo-600 p-1.5 rounded-lg">
             <Rocket className="text-main w-4 h-4" />
           </div>
-          <span className="text-lg font-black tracking-tight text-main">BOOSTMGR</span>
+          <span className="text-lg font-black tracking-tight text-main">Boost Manager</span>
         </div>
         <p className="text-zinc-600 text-xs font-bold uppercase tracking-widest">
           © {new Date().getFullYear()} Boost Manager Inc. All rights reserved.

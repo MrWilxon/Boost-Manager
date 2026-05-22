@@ -6,7 +6,8 @@ import { User } from '@supabase/supabase-js';
 export const useDashboardData = (
   user: User | null, 
   profile: UserProfile | null,
-  itemsPerPage: number
+  itemsPerPage: number,
+  scope: 'personal' | 'all' = 'personal'
 ) => {
   const [requests, setRequests] = useState<BoostRequest[]>([]);
   const [balanceRequests, setBalanceRequests] = useState<BalanceRequest[]>([]);
@@ -26,7 +27,7 @@ export const useDashboardData = (
 
       // 1. Fetch Boost Requests with pagination via backend
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const reqResponse = await fetch(`${apiUrl}/api/dashboard/boost-requests?page=${currentPage}&limit=${itemsPerPage}`, {
+      const reqResponse = await fetch(`${apiUrl}/api/dashboard/boost-requests?page=${currentPage}&limit=${itemsPerPage}&scope=${scope}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -65,7 +66,7 @@ export const useDashboardData = (
       setHasMore((count || 0) > currentPage * itemsPerPage);
 
       // 2. Fetch Balance Requests via backend
-      const balResponse = await fetch(`${apiUrl}/api/dashboard/balance-requests`, {
+      const balResponse = await fetch(`${apiUrl}/api/dashboard/balance-requests?scope=${scope}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

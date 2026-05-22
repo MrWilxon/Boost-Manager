@@ -123,7 +123,7 @@ app.get('/api/profile/:id', authMiddleware, async (req, res) => {
 // Proxy for Boost Requests
 app.get('/api/dashboard/boost-requests', authMiddleware, async (req, res) => {
   try {
-    const { page = '1', limit = '10' } = req.query;
+    const { page = '1', limit = '10', scope = 'personal' } = req.query;
     const reqUser = (req as any).user;
     const pageNum = parseInt(page as string, 10);
     const limitNum = parseInt(limit as string, 10);
@@ -132,7 +132,7 @@ app.get('/api/dashboard/boost-requests', authMiddleware, async (req, res) => {
       .from('boost_requests')
       .select('*', { count: 'exact' });
       
-    if (reqUser.role !== 'Admin') {
+    if (reqUser.role !== 'Admin' || scope === 'personal') {
       query = query.eq('user_id', reqUser.id);
     }
     
@@ -152,13 +152,14 @@ app.get('/api/dashboard/boost-requests', authMiddleware, async (req, res) => {
 // Proxy for Balance Requests
 app.get('/api/dashboard/balance-requests', authMiddleware, async (req, res) => {
   try {
+    const { scope = 'personal' } = req.query;
     const reqUser = (req as any).user;
     
     let query = supabaseAdmin
       .from('balance_requests')
       .select('*');
       
-    if (reqUser.role !== 'Admin') {
+    if (reqUser.role !== 'Admin' || scope === 'personal') {
       query = query.eq('user_id', reqUser.id);
     }
     
@@ -243,6 +244,65 @@ app.post('/api/delete-request', authMiddleware, async (req, res) => {
   }
 });
 
+// ── Settings: fetch global app settings ────────────────────────────────────────
+app.get('/api/settings/app', async (req, res) => {
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('app_settings')
+      .select('*')
+      .eq('id', 'global')
+      .single();
+    if (error) throw error;
+    res.json({ data });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Admin: fetch all profiles ──────────────────────────────────────────────────
+app.get('/api/admin/profiles', authMiddleware, async (req, res) => {
+  const reqUser = (req as any).user;
+  if (reqUser.role !== 'Admin') {
+    return res.status(403).json({ error: 'Forbidden: Admins only' });
+  }
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json({ data });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Admin: fetch audit logs with performer info ────────────────────────────────
+app.get('/api/admin/audit-logs', authMiddleware, async (req, res) => {
+  const reqUser = (req as any).user;
+  if (reqUser.role !== 'Admin') {
+    return res.status(403).json({ error: 'Forbidden: Admins only' });
+  }
+  try {
+    const { data, error } = await supabaseAdmin
+      .from('audit_logs')
+      .select(`
+        *,
+        performer:profiles!audit_logs_performed_by_fkey (
+          username,
+          email
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    res.json({ data });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Backend running on port ${PORT}`);
 });
+

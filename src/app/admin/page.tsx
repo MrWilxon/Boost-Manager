@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield, Users, Rocket, CreditCard, Tag, Activity } from 'lucide-react';
+import { Shield, Users, Rocket, CreditCard, Tag, Activity, Settings } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
 import { Navbar } from '@/src/components/layout/Navbar';
 import { AdminUserManagement } from '@/src/components/dashboard/AdminUserManagement';
@@ -10,13 +10,14 @@ import { BoostRequestTable } from '@/src/components/dashboard/BoostRequestTable'
 import { BalanceRequestTable } from '@/src/components/dashboard/BalanceRequestTable';
 import { AdminPromoCodes } from '@/src/components/dashboard/AdminPromoCodes';
 import { AdminAuditLogs } from '@/src/components/dashboard/AdminAuditLogs';
+import { AdminSystemConfig } from '@/src/components/dashboard/AdminSystemConfig';
 import { useDashboardData } from '@/src/hooks/useDashboardData';
 import { generateBoostInvoice, generateTopupInvoice } from '@/src/utils/pdfGenerator';
 
 export default function AdminPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'users' | 'boosts' | 'topups' | 'promos' | 'audit'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'boosts' | 'topups' | 'promos' | 'audit' | 'config'>('users');
   
   const {
     requests,
@@ -24,7 +25,7 @@ export default function AdminPage() {
     loading: dataLoading,
     setRequests,
     setBalanceRequests
-  } = useDashboardData(user, profile, 100);
+  } = useDashboardData(user, profile, 100, 'all');
 
   // Redirect if not admin
   React.useEffect(() => {
@@ -118,6 +119,14 @@ export default function AdminPage() {
           >
             <Activity size={16} /> Audit Logs
           </button>
+          <button
+            onClick={() => setActiveTab('config')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 ${
+              activeTab === 'config' ? 'nm-flat text-rose-400 border border-white/5 shadow-[-3px_-3px_8px_rgba(255,255,255,0.03),_3px_3px_8px_rgba(0,0,0,0.4)]' : 'text-muted hover:text-muted hover:nm-flat hover:border-transparent'
+            }`}
+          >
+            <Settings size={16} /> System Config
+          </button>
         </div>
 
         {/* Tab Content */}
@@ -158,6 +167,12 @@ export default function AdminPage() {
           {activeTab === 'audit' && (
             <div className="nm-flat rounded-3xl p-6 border border-white/5">
               <AdminAuditLogs />
+            </div>
+          )}
+
+          {activeTab === 'config' && (
+            <div className="nm-flat rounded-3xl p-6 border border-white/5">
+              <AdminSystemConfig />
             </div>
           )}
         </div>

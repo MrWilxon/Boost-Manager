@@ -67,12 +67,12 @@ export default function Login() {
             <div className="absolute bottom-[-10%] right-[-20%] w-[60%] h-[60%] rounded-full bg-rose-600/5 blur-[100px] mix-blend-screen animate-pulse" style={{ animationDuration: '12s' }} />
          </div>
          
-         <div className="relative z-10 flex items-center gap-3">
+         <Link href="/" className="relative z-10 flex items-center gap-3">
             <div className="bg-indigo-600/90 p-2.5 rounded-xl shadow-[-4px_-4px_10px_rgba(255,255,255,0.05),_4px_4px_10px_rgba(0,0,0,0.5)]">
                <Rocket className="text-main w-5 h-5" />
             </div>
-            <span className="text-xl font-black tracking-tight text-main">BOOSTMGR</span>
-         </div>
+            <span className="text-xl font-black tracking-tight text-main">Boost Manager</span>
+         </Link>
          
          <div className="relative z-10 max-w-md">
             <motion.h2 
@@ -111,18 +111,18 @@ export default function Login() {
 
       {/* Right Panel - Form */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 relative z-10 bg-surface">
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, ease: "circOut" }}
-          className="w-full max-w-sm relative z-10"
-        >
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, ease: "circOut" }}
+              className="w-full max-w-sm relative z-10 bg-white/5 backdrop-blur-sm nm-flat rounded-2xl p-8 shadow-xl"
+            >
           <div className="mb-10 text-center lg:text-left">
             <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
                <div className="bg-indigo-600 p-2.5 rounded-xl shadow-[-4px_-4px_10px_rgba(255,255,255,0.05),_4px_4px_10px_rgba(0,0,0,0.5)]">
                   <Rocket className="text-main w-5 h-5" />
                </div>
-               <span className="text-xl font-black tracking-tight text-main">BOOSTMGR</span>
+               <span className="text-xl font-black tracking-tight text-main">Boost Manager</span>
             </div>
             <h1 className="text-3xl font-black text-main tracking-tight mb-2">Welcome back.</h1>
             <p className="text-muted text-sm font-medium">Enter your credentials to access the engine.</p>
@@ -189,7 +189,7 @@ export default function Login() {
                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>
-                  Authenticate <LogIn size={16} className="group-hover:translate-x-1 transition-transform" />
+                    Log In <LogIn size={16} className={"group-hover:translate-x-1 transition-transform"} />
                 </>
               )}
             </button>

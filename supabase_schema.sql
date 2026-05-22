@@ -5,6 +5,8 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
 DROP FUNCTION IF EXISTS public.increment_balance(UUID, NUMERIC);
 DROP FUNCTION IF EXISTS public.is_admin();
+DROP FUNCTION IF EXISTS public.admin_get_all_profiles();
+DROP FUNCTION IF EXISTS public.admin_get_audit_logs();
 
 -- Helper function to check if current user is admin without triggering RLS recursion
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -16,6 +18,47 @@ BEGIN
     RETURN COALESCE(is_admin, false);
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+-- Admin RPC: fetch all profiles (bypasses RLS, checks admin role internally)
+CREATE OR REPLACE FUNCTION public.admin_get_all_profiles()
+RETURNS SETOF public.profiles
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+  RETURN QUERY SELECT * FROM public.profiles ORDER BY created_at DESC;
+END;
+$$;
+
+-- Admin RPC: fetch audit logs with performer info (bypasses RLS, checks admin role internally)
+CREATE OR REPLACE FUNCTION public.admin_get_audit_logs()
+RETURNS TABLE (
+  id uuid, action text, performed_by uuid, target_user_id uuid,
+  details jsonb, created_at timestamptz,
+  performer_username text, performer_email text
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Access denied';
+  END IF;
+  RETURN QUERY
+    SELECT al.id, al.action, al.performed_by, al.target_user_id,
+           al.details, al.created_at,
+           p.username AS performer_username, p.email AS performer_email
+    FROM public.audit_logs al
+    LEFT JOIN public.profiles p ON p.id = al.performed_by
+    ORDER BY al.created_at DESC
+    LIMIT 100;
+END;
+$$;
 
 -- 1. PROFILES TABLE
 -- Maps user accounts and profiles. References auth.users from Supabase auth dashboard.
@@ -368,3 +411,36 @@ alter publication supabase_realtime add table public.profiles;
 alter publication supabase_realtime add table public.boost_requests;
 alter publication supabase_realtime add table public.balance_requests;
 alter publication supabase_realtime add table public.promo_codes;
+
+-- 14. CAMPAIGN TYPES TABLE
+CREATE TABLE IF NOT EXISTS public.campaign_types (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL
+);
+
+-- Enable RLS for campaign types
+ALTER TABLE public.campaign_types ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can manage campaign types" ON public.campaign_types FOR ALL USING (public.is_admin());
+
+-- 15. APP SETTINGS TABLE
+CREATE TABLE IF NOT EXISTS public.app_settings (
+    id TEXT PRIMARY KEY,
+    exchange_rate NUMERIC(12,2) NOT NULL DEFAULT 135,
+    created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable RLS for app settings
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can manage app settings" ON public.app_settings FOR ALL USING (public.is_admin());
+-- Allow all authenticated users to read the exchange rate
+CREATE POLICY "Authenticated users can read app settings" ON public.app_settings FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Allow all authenticated users to read active campaign types (needed for Boost Request modal)
+CREATE POLICY "Authenticated users can read campaign types" ON public.campaign_types FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Add to realtime publication
+alter publication supabase_realtime add table public.campaign_types;
+alter publication supabase_realtime add table public.app_settings;
