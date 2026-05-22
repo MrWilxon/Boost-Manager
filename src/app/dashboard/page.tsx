@@ -38,6 +38,39 @@ import { generateBoostInvoice, generateTopupInvoice } from "@/src/utils/pdfGener
 
 type TabType = "requests" | "analytics" | "users" | "balance";
 
+function DashboardLoader() {
+  const [showHint, setShowHint] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setShowHint(true), 5000);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 pb-24 lg:pb-8" suppressHydrationWarning>
+      <div className="relative w-12 h-12">
+        <RotateCw className="animate-spin text-indigo-500 w-12 h-12" />
+        <div className="absolute inset-0 rounded-full bg-indigo-500/10 animate-ping" />
+      </div>
+      <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Initializing Engine...</p>
+      {showHint && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-2 mt-2"
+        >
+          <p className="text-[10px] text-muted text-center max-w-[200px]">Taking longer than usual. Make sure the server is running.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest transition-colors cursor-pointer"
+          >
+            Refresh Page
+          </button>
+        </motion.div>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -230,12 +263,7 @@ export default function DashboardPage() {
   }, [requests, searchQuery, platformFilter, filterStatus]);
 
   if (authLoading || !user || !profile) {
-    return (
-      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 pb-24 lg:pb-8" suppressHydrationWarning>
-        <RotateCw className="animate-spin text-indigo-500 w-10 h-10" />
-        <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em]">Initializing Engine...</p>
-      </div>
-    );
+    return <DashboardLoader />;
   }
 
   const tabs = [

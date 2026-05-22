@@ -31,13 +31,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string, token: string) => {
+    // Timeout guard — never hang for more than 8s
+    const timeoutId = setTimeout(() => {
+      console.warn('[Auth] Profile fetch timed out — releasing loading state');
+      setLoading(false);
+    }, 8000);
+
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+      const controller = new AbortController();
+      const fetchTimeout = setTimeout(() => controller.abort(), 7000);
+
       const response = await fetch(`${apiUrl}/api/profile/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+        headers: { 'Authorization': `Bearer ${token}` },
+        signal: controller.signal,
       });
+      clearTimeout(fetchTimeout);
+
       if (!response.ok) {
         throw new Error('Failed to fetch profile from backend');
       }
@@ -59,6 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   };
