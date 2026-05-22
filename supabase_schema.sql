@@ -1,12 +1,12 @@
 -- BOOST MANAGER DATABASE INITIALIZATION SCHEMA
 
 -- Drop existing views/triggers/functions if they exist
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS public.handle_new_user();
-DROP FUNCTION IF EXISTS public.increment_balance(UUID, NUMERIC);
-DROP FUNCTION IF EXISTS public.is_admin();
-DROP FUNCTION IF EXISTS public.admin_get_all_profiles();
-DROP FUNCTION IF EXISTS public.admin_get_audit_logs();
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users CASCADE;
+DROP FUNCTION IF EXISTS public.handle_new_user() CASCADE;
+DROP FUNCTION IF EXISTS public.increment_balance(UUID, NUMERIC) CASCADE;
+DROP FUNCTION IF EXISTS public.is_admin() CASCADE;
+DROP FUNCTION IF EXISTS public.admin_get_all_profiles() CASCADE;
+DROP FUNCTION IF EXISTS public.admin_get_audit_logs() CASCADE;
 
 -- Helper function to check if current user is admin without triggering RLS recursion
 CREATE OR REPLACE FUNCTION public.is_admin()
@@ -86,7 +86,7 @@ CREATE POLICY "Users can update their own profile fields" ON public.profiles
     WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Admins can manage all profiles" ON public.profiles
-    FOR ALL USING (public.is_admin());
+    FOR ALL USING (auth.uid() != id AND public.is_admin());
 
 -- 2. BOOST REQUESTS TABLE
 -- Tracks client orders for boosting services
