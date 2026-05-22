@@ -65,7 +65,7 @@ export default function Home() {
               <Rocket className="text-main w-4 h-4 md:w-5 md:h-5" />
             </div>
             <span className="text-sm md:text-base font-black tracking-tight text-main">
-              BOOST<span className="text-muted">MGR</span>
+              BOOST<span className="text-muted"> MANAGER</span>
             </span>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
