@@ -4,7 +4,7 @@ import React, { useEffect } from 'react';
 import OneSignal from 'react-onesignal';
 import { useAuth } from './AuthContext';
 
-let isOneSignalInitialized = false;
+let oneSignalInitPromise: Promise<void> | null = null;
 
 export const OneSignalProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
@@ -19,9 +19,8 @@ export const OneSignalProvider = ({ children }: { children: React.ReactNode }) =
       }
 
       try {
-        if (!isOneSignalInitialized) {
-          isOneSignalInitialized = true; // Set synchronously to prevent React 18 Strict Mode double-calls
-          await OneSignal.init({
+        if (!oneSignalInitPromise) {
+          oneSignalInitPromise = OneSignal.init({
             appId: appId,
             notifyButton: {
               enable: true,
@@ -29,11 +28,13 @@ export const OneSignalProvider = ({ children }: { children: React.ReactNode }) =
             allowLocalhostAsSecureOrigin: true, // For development
           });
         }
+        
+        await oneSignalInitPromise;
 
         try {
-          if (user && isOneSignalInitialized) {
+          if (user) {
             await OneSignal.login(user.id);
-          } else if (!user && isOneSignalInitialized) {
+          } else {
             await OneSignal.logout();
           }
         } catch (loginError) {
