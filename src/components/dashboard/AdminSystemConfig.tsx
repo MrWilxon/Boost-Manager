@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Settings, DollarSign, Layers, Plus, Trash2, CheckCircle,
   XCircle, Save, RefreshCw, AlertCircle, ToggleLeft, ToggleRight,
-  MessageCircle, Zap
+  MessageCircle, Zap, Edit2
 } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { ALL_PLATFORMS } from '../../constants';
@@ -671,7 +671,7 @@ export const AdminSystemConfig: React.FC = () => {
                       }}
                       className="p-1.5 text-zinc-500 hover:text-indigo-400 transition-colors"
                     >
-                      <Settings size={14} />
+                      <Edit2 size={14} />
                     </button>
                     <button
                       onClick={async () => {
@@ -838,7 +838,7 @@ export const AdminSystemConfig: React.FC = () => {
                         }}
                         className="p-1.5 rounded-lg nm-flat hover:nm-concave text-zinc-600 hover:text-indigo-400 border border-white/5 transition-all cursor-pointer active:scale-[0.95]"
                       >
-                        <Settings size={13} />
+                        <Edit2 size={13} />
                       </button>
                     )}
 

@@ -19,7 +19,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
   const { theme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
-  const isAdminPage = pathname === '/admin';
+  const isAdminPage = pathname?.startsWith('/admin');
 
     return (
     <header className="sticky top-4 z-50 mx-4 md:mx-8 mb-6 nm-flat px-4 md:px-8 py-3.5 rounded-2xl transition-all duration-300">
