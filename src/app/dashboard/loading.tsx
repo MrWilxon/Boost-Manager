@@ -1,5 +1,6 @@
 import React from 'react';
 import { DashboardSkeleton } from '@/src/components/common/DashboardSkeleton';
+import { ModernLoader } from '@/src/components/common/ModernLoader';
 
 export default function DashboardLoading() {
   return (

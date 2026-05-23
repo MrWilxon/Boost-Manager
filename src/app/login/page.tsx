@@ -118,12 +118,12 @@ export default function Login() {
               className="w-full max-w-sm relative z-10 bg-white/5 backdrop-blur-sm nm-flat rounded-2xl p-8 shadow-xl"
             >
           <div className="mb-10 text-center lg:text-left">
-            <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
+            <Link href="/" className="lg:hidden flex items-center justify-center gap-3 mb-8 hover:opacity-80 transition-opacity">
                <div className="bg-indigo-600 p-2.5 rounded-xl shadow-[-4px_-4px_10px_rgba(255,255,255,0.05),_4px_4px_10px_rgba(0,0,0,0.5)]">
                   <Rocket className="text-main w-5 h-5" />
                </div>
                <span className="text-xl font-black tracking-tight text-main">Boost Manager</span>
-            </div>
+            </Link>
             <h1 className="text-3xl font-black text-main tracking-tight mb-2">Welcome back.</h1>
             <p className="text-muted text-sm font-medium">Enter your credentials to access the engine.</p>
           </div>
