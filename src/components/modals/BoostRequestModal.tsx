@@ -254,7 +254,16 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
         setAppliedPromo(null);
         return;
       }
-      setAppliedPromo(data);
+      setAppliedPromo({
+        id: data.id,
+        code: data.code,
+        discountType: data.discount_type,
+        value: data.value,
+        isActive: data.is_active,
+        usageCount: data.usage_count,
+        maxUsage: data.max_usage
+      });
+      setPromoSuccess(true);
     } catch (err: any) {
       setError("Error applying promo code.");
       setAppliedPromo(null);
@@ -274,20 +283,30 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const dailyBudget = modalBudget && modalDuration ? (modalBudget / modalDuration).toFixed(2) : "0.00";
 
   const generateTextFormat = () => {
-    return `🚀 *New Boost Campaign Request*
-
-*URL:* ${modalUrl || 'Not provided'}
-*Platforms:* ${selectedPlatforms.join(', ')}
-*Location:* ${modalLocations.join(', ')}
-*Gender:* ${modalGender}
-*Age:* ${isCustomAge ? customAge : modalAge}
-*Ad Goal:* ${modalAdGoal}
-${modalAdGoal === 'Get Message' ? `*Destination:* ${modalDestinations.join(', ')}\n` : ''}*Budget Allocation:* $${modalBudget}
-*Duration:* ${modalDuration} days
-*Estimated Reach:* ${eligibility.estimatedReach}
-*Total Payable:* रू${eligibility.totalNpr.toLocaleString()}
-
-*Notes:* ${modalNotes || 'None'}`;
+    let text = '';
+    if (modalUrl) {
+      text += `${modalUrl}\n`;
+    }
+    text += `Platforms: ${selectedPlatforms.join(', ')}\n`;
+    text += `Location: ${isCustomLocation ? customLocation : modalLocations.join(', ')}\n`;
+    text += `Gender: ${modalGender}\n`;
+    text += `Age: ${isCustomAge ? customAge : modalAge}\n`;
+    text += `Ad Goal: ${modalAdGoal}\n`;
+    
+    if (modalAdGoal === 'Get Message' && modalDestinations.length > 0) {
+      text += `Destination: ${modalDestinations.join(', ')}\n`;
+    }
+    
+    text += `Total Budget: $${modalBudget}\n`;
+    text += `Duration: ${modalDuration} days\n`;
+    text += `Estimated Reach: ${eligibility.estimatedReach}\n`;
+    text += `Total Payable: रू${eligibility.totalNpr.toLocaleString()}`;
+    
+    if (modalNotes && modalNotes.trim() !== '') {
+      text += `\n\nNotes: ${modalNotes}`;
+    }
+    
+    return text;
   };
 
   const handleWhatsAppSupport = () => {
