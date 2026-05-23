@@ -110,7 +110,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="absolute top-[calc(100%+1rem)] left-0 right-0 bg-[#0f172a]/90 backdrop-blur-xl rounded-2xl p-4 flex flex-col gap-3 md:hidden shadow-2xl animate-in slide-in-from-top-4 fade-in duration-200 z-50 border border-white/5">
+        <div className="absolute top-[calc(100%+1rem)] left-0 right-0 bg-surface/95 backdrop-blur-xl rounded-2xl p-4 flex flex-col gap-3 md:hidden shadow-[0_10px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] animate-in slide-in-from-top-4 fade-in duration-200 z-50 border border-black/5 dark:border-white/5">
           {profile && (
             <div className="flex items-center gap-3 nm-inset rounded-xl p-3 border border-white/5 mb-2">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg ${profile.role === 'Admin' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'}`}>

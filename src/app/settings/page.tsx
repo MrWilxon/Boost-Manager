@@ -6,6 +6,7 @@ import { supabase } from '@/src/services/supabase';
 import { useAuth } from '@/src/context/AuthContext';
 import { Navbar } from '@/src/components/layout/Navbar';
 import { Settings, Lock, Phone, User, Camera, Save, Building } from 'lucide-react';
+import { SettingsSkeleton } from '@/src/components/common/SettingsSkeleton';
 
 export default function SettingsPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -120,8 +121,9 @@ export default function SettingsPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+      <div className="min-h-screen bg-surface selection:bg-indigo-500/30">
+        <Navbar />
+        <SettingsSkeleton />
       </div>
     );
   }

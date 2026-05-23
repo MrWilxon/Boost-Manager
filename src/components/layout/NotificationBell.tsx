@@ -112,7 +112,7 @@ export const NotificationBell = () => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute right-0 mt-3 w-80 nm-flat rounded-2xl border border-white/5 z-[100] overflow-hidden"
+            className="fixed top-[72px] right-4 left-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-3 sm:w-80 nm-flat rounded-2xl border border-white/5 z-[100] overflow-hidden"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-surface/50">
               <h3 className="text-xs font-black text-main uppercase tracking-widest">Notifications</h3>
@@ -146,7 +146,7 @@ export const NotificationBell = () => {
                       <div className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${!n.is_read ? 'bg-indigo-500' : 'bg-transparent'}`}></div>
                       <div className="flex-1">
                         <h4 className={`text-xs ${!n.is_read ? 'font-black text-main' : 'font-bold text-zinc-300'}`}>{n.title}</h4>
-                        <p className={`text-[11px] mt-1 ${!n.is_read ? 'text-zinc-300' : 'text-zinc-500'}`}>{n.message}</p>
+                        <p className={`text-[11px] mt-1 break-words whitespace-normal leading-relaxed ${!n.is_read ? 'text-zinc-300 dark:text-zinc-300' : 'text-zinc-600 dark:text-zinc-500'}`}>{n.message}</p>
                         <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest mt-2 block">
                           {new Date(n.created_at).toLocaleString()}
                         </span>
