@@ -97,12 +97,20 @@ export const NotificationBell = () => {
     <div className="relative flex items-center justify-center" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="btn-icon relative"
-        title="Notifications"
+        className="flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] cursor-pointer bg-surface border border-white/5 shadow-[-4px_-4px_12px_var(--nm-shadow-light),_4px_4px_12px_var(--nm-shadow-dark)] hover:shadow-[-5px_-5px_15px_var(--nm-shadow-light),_5px_5px_15px_var(--nm-shadow-dark)]"
+        title="Alerts"
       >
-        <Bell size={16} />
+        <div className="relative flex items-center justify-center">
+          <Bell size={16} className={unreadCount > 0 ? "text-indigo-400" : "text-muted"} />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1.5 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-surface md:hidden"></span>
+          )}
+        </div>
+        <span className="hidden md:block text-xs font-black uppercase tracking-widest text-main">Alerts</span>
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-surface"></span>
+          <span className="hidden md:flex items-center justify-center bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md leading-none">
+            {unreadCount}
+          </span>
         )}
       </button>
 
@@ -112,7 +120,7 @@ export const NotificationBell = () => {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="fixed top-[72px] right-4 left-4 sm:absolute sm:top-auto sm:left-auto sm:right-0 sm:mt-3 sm:w-80 nm-flat rounded-2xl border border-white/5 z-[100] overflow-hidden"
+            className="fixed top-[72px] right-4 left-4 sm:absolute sm:top-full sm:left-auto sm:right-0 sm:mt-3 sm:w-80 nm-flat rounded-2xl border border-white/5 z-[100] overflow-hidden"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-surface/50">
               <h3 className="text-xs font-black text-main uppercase tracking-widest">Notifications</h3>

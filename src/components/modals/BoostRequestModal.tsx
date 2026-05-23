@@ -336,7 +336,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
             className="relative w-full max-w-5xl max-h-[90vh] nm-flat rounded-3xl overflow-hidden flex flex-col text-main border border-white/5"
           >
             {/* Modal Header */}
-            <div className="px-6 py-5 flex justify-between items-start border-b border-black/30 bg-[#161719]/40">
+            <div className="px-6 py-5 flex justify-between items-start border-b border-black/30 bg-black/5 dark:bg-white/5">
               <div>
                 <h3 className="text-xl font-black text-main tracking-tight">
                   {editingRequestId ? "Edit Boost Campaign" : "Create Boost Campaign"}
@@ -739,7 +739,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
             </div>
 
             {/* Bottom Actions Bar */}
-            <div className="px-8 py-5 bg-[#161719]/40 border-t border-black/30 flex gap-4 mt-auto">
+            <div className="px-8 py-5 bg-black/5 dark:bg-white/5 border-t border-black/30 flex gap-4 mt-auto">
               <button 
                 onClick={onClose}
                 className="btn-ghost px-8 py-3.5 cursor-pointer"

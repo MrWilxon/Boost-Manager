@@ -1,7 +1,7 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { LogOut, User as UserIcon, Rocket, Sun, Moon, Menu, X, Shield } from 'lucide-react';
+import { LogOut, User as UserIcon, Rocket, Sun, Moon, Menu, X, Shield, Megaphone } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { NotificationBell } from './NotificationBell';
@@ -68,6 +68,16 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
                   {profile.username?.charAt(0).toUpperCase() || 'U'}
                 </div>
               </div>
+            )}
+
+            {profile && (
+              <button
+                onClick={() => window.dispatchEvent(new Event('open_announcements'))}
+                className="btn-icon hidden md:flex"
+                title="System Alerts & Notices"
+              >
+                <Megaphone size={16} className="text-amber-500" />
+              </button>
             )}
 
             {profile && <NotificationBell />}

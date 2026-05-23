@@ -34,6 +34,22 @@ export const AnnouncementModal = () => {
     };
 
     fetchActiveAnnouncements();
+
+    const handleManualOpen = async () => {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+      if (data && data.length > 0) {
+        setAnnouncements(data);
+        setCurrentIndex(0);
+        setIsVisible(true);
+      }
+    };
+
+    window.addEventListener('open_announcements', handleManualOpen);
+    return () => window.removeEventListener('open_announcements', handleManualOpen);
   }, []);
 
   const handleDismiss = () => {
@@ -91,7 +107,7 @@ export const AnnouncementModal = () => {
           {/* Body */}
           <div className="p-6">
             <h2 className="text-xl font-bold text-white mb-2">{current.title}</h2>
-            <div className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap">
+            <div className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
               {current.content}
             </div>
           </div>
