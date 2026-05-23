@@ -51,16 +51,16 @@ export const generateBoostInvoice = (request: BoostRequest) => {
   // Table Content
   doc.setTextColor(50, 50, 50);
   doc.setFontSize(11);
-  const description = `${request.platform} Campaign - ${request.adGoal}: Budget $${request.budget}`;
+  const description = `${request.platform} Campaign - ${request.adGoal}: Budget NPR ${request.budget}`;
   doc.text(description, 18, 130);
-  doc.text(`रू ${request.amountNpr?.toLocaleString() || 0}`, 160, 130);
+  doc.text(`NPR ${request.amountNpr?.toLocaleString() || 0}`, 160, 130);
 
   // Total
   doc.line(14, 140, 196, 140);
   doc.setFont('helvetica', 'bold');
   doc.text('Total Paid:', 120, 150);
   doc.setTextColor(99, 102, 241); // Indigo
-  doc.text(`रू ${request.amountNpr?.toLocaleString() || 0}`, 160, 150);
+  doc.text(`NPR ${request.amountNpr?.toLocaleString() || 0}`, 160, 150);
 
   // Footer
   doc.setFont('helvetica', 'normal');
@@ -125,14 +125,14 @@ export const generateTopupInvoice = (request: BalanceRequest) => {
   doc.setTextColor(50, 50, 50);
   doc.setFontSize(11);
   doc.text('Wallet Balance Top-up', 18, 140);
-  doc.text(`रू ${request.amount.toLocaleString()}`, 160, 140);
+  doc.text(`NPR ${request.amount.toLocaleString()}`, 160, 140);
 
   // Total
   doc.line(14, 150, 196, 150);
   doc.setFont('helvetica', 'bold');
   doc.text('Total Top-up:', 120, 160);
   doc.setTextColor(16, 185, 129); // Emerald
-  doc.text(`रू ${request.amount.toLocaleString()}`, 160, 160);
+  doc.text(`NPR ${request.amount.toLocaleString()}`, 160, 160);
 
   // Footer
   doc.setFont('helvetica', 'normal');

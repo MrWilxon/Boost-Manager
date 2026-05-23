@@ -39,6 +39,8 @@ import { BoostRequest, BalanceRequest, RequestStatus } from "@/src/types";
 import { generateBoostInvoice, generateTopupInvoice } from "@/src/utils/pdfGenerator";
 import DashboardLoading from './loading';
 
+import { DashboardSkeleton } from "@/src/components/common/DashboardSkeleton";
+
 type TabType = "requests" | "analytics" | "users" | "balance";
 
 function DashboardLoader({ isProfileMissing = false }: { isProfileMissing?: boolean }) {
@@ -49,45 +51,46 @@ function DashboardLoader({ isProfileMissing = false }: { isProfileMissing?: bool
   }, []);
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 pb-24 lg:pb-8" suppressHydrationWarning>
-      <div className="relative w-12 h-12" suppressHydrationWarning>
-        <RotateCw className="animate-spin text-indigo-500 w-12 h-12" suppressHydrationWarning />
-        <div className="absolute inset-0 rounded-full bg-indigo-500/10 animate-ping" suppressHydrationWarning />
-      </div>
-      <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em]" suppressHydrationWarning>Initializing Engine...</p>
+    <div className="relative min-h-screen" suppressHydrationWarning>
+      <DashboardSkeleton />
       
-      {isProfileMissing && showHint && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-2 mt-4 max-w-sm text-center px-4"
-        >
-          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-medium">
-            We couldn't fetch your profile data. Please try logging out and logging back in, or contact support if the issue persists.
-          </div>
-          <button
-            onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')}
-            className="text-[10px] font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors cursor-pointer mt-2"
-          >
-            Logout & Try Again
-          </button>
-        </motion.div>
-      )}
+      {/* Overlay Hints if loading takes too long */}
+      {(showHint || isProfileMissing) && (
+        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-surface/80 backdrop-blur-sm">
+          {isProfileMissing && showHint && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-2 mt-4 max-w-sm text-center px-4"
+            >
+              <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-medium">
+                We couldn't fetch your profile data. Please try logging out and logging back in, or contact support if the issue persists.
+              </div>
+              <button
+                onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')}
+                className="text-[10px] font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors cursor-pointer mt-2"
+              >
+                Logout & Try Again
+              </button>
+            </motion.div>
+          )}
 
-      {showHint && !isProfileMissing && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-2 mt-2"
-        >
-          <p className="text-[10px] text-muted text-center max-w-[200px]">Taking longer than usual. Make sure the server is running.</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest transition-colors cursor-pointer"
-          >
-            Refresh Page
-          </button>
-        </motion.div>
+          {showHint && !isProfileMissing && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-2 mt-2"
+            >
+              <p className="text-[10px] text-muted text-center max-w-[200px]">Taking longer than usual. Make sure the server is running.</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-[10px] font-black text-indigo-400 hover:text-indigo-300 uppercase tracking-widest transition-colors cursor-pointer mt-2"
+              >
+                Refresh Engine
+              </button>
+            </motion.div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -396,9 +399,9 @@ export default function DashboardPage() {
 
         {/* Admin Alert Banner */}
         {adminAlertMessage && (
-          <div className="p-4 bg-indigo-600 text-white rounded-2xl flex items-center gap-3 shadow-lg shadow-indigo-600/20">
-            <AlertTriangle className="animate-pulse shrink-0" size={20} />
-            <span className="text-sm font-bold">{adminAlertMessage}</span>
+          <div className="p-4 bg-indigo-600 text-white rounded-2xl flex items-start gap-3 shadow-lg shadow-indigo-600/20">
+            <AlertTriangle className="animate-pulse shrink-0 mt-0.5" size={20} />
+            <span className="text-sm font-bold leading-snug">{adminAlertMessage}</span>
           </div>
         )}
 

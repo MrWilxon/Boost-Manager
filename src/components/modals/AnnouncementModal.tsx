@@ -72,11 +72,11 @@ export const AnnouncementModal = () => {
           initial={{ scale: 0.9, y: 20 }}
           animate={{ scale: 1, y: 0 }}
           exit={{ scale: 0.9, y: 20 }}
-          className="relative w-full max-w-md nm-flat rounded-3xl border border-indigo-500/30 overflow-hidden"
+          className="relative w-full max-w-md nm-flat rounded-3xl border border-indigo-500/30 overflow-y-auto max-h-[90vh] flex flex-col"
         >
           {/* Header */}
           <div className="px-6 py-4 border-b border-white/5 bg-indigo-500/10 flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+            <div className="w-8 h-8 rounded-xl bg-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
               <Megaphone size={16} />
             </div>
             <h3 className="font-black text-main uppercase tracking-widest text-sm flex-1">Notice</h3>

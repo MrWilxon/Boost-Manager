@@ -325,7 +325,7 @@ export const AdminSystemConfig: React.FC = () => {
             initial={{ opacity: 0, y: -16, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.95 }}
-            className={`fixed top-6 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-2xl nm-flat border text-sm font-bold shadow-xl ${
+            className={`fixed top-24 right-6 z-[200] flex items-center gap-3 px-5 py-3.5 rounded-2xl nm-flat border text-sm font-bold shadow-xl ${
               toast.type === 'success'
                 ? 'border-emerald-500/20 text-emerald-400'
                 : 'border-rose-500/20 text-rose-400'

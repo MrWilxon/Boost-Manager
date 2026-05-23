@@ -99,7 +99,7 @@ export function DeleteConfirmationModal({
                 }`}
               >
                 {!canConfirm && <Clock size={14} className="animate-pulse" />}
-                Confirm {!canConfirm && `(${countdown}s)`}
+                Confirm {!canConfirm && `(${countdown})`}
               </button>
             </div>
           </div>

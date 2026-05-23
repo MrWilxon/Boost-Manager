@@ -243,6 +243,11 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                     )}
                   </div>
                   <div className="flex gap-1.5">
+                    {req.status === "Approved" && onGenerateInvoice && (
+                      <button onClick={() => onGenerateInvoice(req)} className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-emerald-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5" title="Invoice">
+                        <Download size={14} />
+                      </button>
+                    )}
                     {onStartEditing && (
                       <button onClick={() => onStartEditing(req)} className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-indigo-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5">
                         <Edit size={14} />
