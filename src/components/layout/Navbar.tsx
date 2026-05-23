@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { LogOut, User as UserIcon, Rocket, Sun, Moon, Menu, X, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { NotificationBell } from './NotificationBell';
 import { useRouter, usePathname } from 'next/navigation';
 
 interface NavbarProps {
@@ -68,6 +69,8 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
                 </div>
               </div>
             )}
+
+            {profile && <NotificationBell />}
 
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}

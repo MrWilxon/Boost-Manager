@@ -4,6 +4,7 @@ import '../index.css';
 
 import { ErrorOverlayKiller } from '@/src/components/ErrorOverlayKiller';
 import { WhatsAppSupportButton } from '@/src/components/common/WhatsAppSupportButton';
+import { AnnouncementModal } from '@/src/components/modals/AnnouncementModal';
 
 import type { Metadata, Viewport } from 'next';
 
@@ -59,6 +60,7 @@ export default function RootLayout({
         <ErrorOverlayKiller />
         <Providers>
           <WhatsAppSupportButton />
+          <AnnouncementModal />
           {children}
         </Providers>
       </body>

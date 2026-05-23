@@ -359,7 +359,8 @@ export default function DashboardPage() {
         </div>
         <div className="relative z-10">
           <Navbar onSettings={() => {}} />
-          <DashboardLoading />
+          {/* Use DashboardLoader to show error if profile is missing after auth loads */}
+          <DashboardLoader isProfileMissing={!authLoading && !profile} />
         </div>
       </div>
     );

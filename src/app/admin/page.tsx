@@ -11,6 +11,7 @@ const AdminUserManagement = dynamic(() => import('@/src/components/dashboard/Adm
 const BoostRequestTable = dynamic(() => import('@/src/components/dashboard/BoostRequestTable').then(m => m.BoostRequestTable), { ssr: false });
 const BalanceRequestTable = dynamic(() => import('@/src/components/dashboard/BalanceRequestTable').then(m => m.BalanceRequestTable), { ssr: false });
 const AdminPromoCodes = dynamic(() => import('@/src/components/dashboard/AdminPromoCodes').then(m => m.AdminPromoCodes), { ssr: false });
+const AdminAnnouncements = dynamic(() => import('@/src/components/dashboard/AdminAnnouncements').then(m => m.AdminAnnouncements), { ssr: false });
 const AdminAuditLogs = dynamic(() => import('@/src/components/dashboard/AdminAuditLogs').then(m => m.AdminAuditLogs), { ssr: false });
 const AdminSystemConfig = dynamic(() => import('@/src/components/dashboard/AdminSystemConfig').then(m => m.AdminSystemConfig), { ssr: false });
 import { useDashboardData } from '@/src/hooks/useDashboardData';
@@ -20,7 +21,7 @@ import AdminLoading from './loading';
 export default function AdminPage() {
   const { user, profile, loading: authLoading } = useAuth();
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'users' | 'boosts' | 'topups' | 'promos' | 'audit' | 'config'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'boosts' | 'topups' | 'promos' | 'announcements' | 'audit' | 'config'>('users');
   
   const {
     requests,
@@ -118,6 +119,14 @@ export default function AdminPage() {
             <Tag size={16} /> Promos
           </button>
           <button
+            onClick={() => setActiveTab('announcements')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 ${
+              activeTab === 'announcements' ? 'nm-flat text-orange-400 border border-white/5 shadow-[-3px_-3px_8px_rgba(255,255,255,0.03),_3px_3px_8px_rgba(0,0,0,0.4)]' : 'text-muted hover:text-muted hover:nm-flat hover:border-transparent'
+            }`}
+          >
+            <Activity size={16} /> Notice
+          </button>
+          <button
             onClick={() => setActiveTab('audit')}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 ${
               activeTab === 'audit' ? 'nm-flat text-cyan-400 border border-white/5 shadow-[-3px_-3px_8px_rgba(255,255,255,0.03),_3px_3px_8px_rgba(0,0,0,0.4)]' : 'text-muted hover:text-muted hover:nm-flat hover:border-transparent'
@@ -168,6 +177,12 @@ export default function AdminPage() {
           {activeTab === 'promos' && (
             <div className="nm-flat rounded-3xl p-6 border border-white/5">
               <AdminPromoCodes />
+            </div>
+          )}
+
+          {activeTab === 'announcements' && (
+            <div className="nm-flat rounded-3xl p-6 border border-white/5">
+              <AdminAnnouncements />
             </div>
           )}
 

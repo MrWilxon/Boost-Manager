@@ -47,7 +47,7 @@ export default function Home() {
       <div className="fixed inset-0 z-0">
         <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/20 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '10s' }} />
         <div className="absolute top-[20%] right-[-10%] w-[40%] h-[60%] rounded-full bg-rose-900/10 blur-[120px] mix-blend-screen animate-pulse" style={{ animationDuration: '14s', animationDelay: '2s' }} />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGZpbHRlciBpZD0ibiI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjEuNSIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNuKSIgb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-20 mix-blend-overlay"></div>
+        <div className="absolute inset-0 noise-overlay opacity-20 mix-blend-overlay"></div>
       </div>
 
       {/* Floating Glass Navigation */}
@@ -244,7 +244,7 @@ export default function Home() {
       {/* CTA Section */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 py-32 mb-20">
         <div className="bg-gradient-to-br from-indigo-900/50 to-rose-900/20 border border-white/10 rounded-[40px] p-12 md:p-24 text-center overflow-hidden relative">
-           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGZpbHRlciBpZD0ibiI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjEuNSIgbnVtT2N0YXZlcz0iMyIgc3RpdGNoVGlsZXM9InN0aXRjaCIvPjwvZmlsdGVyPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbHRlcj0idXJsKCNuKSIgb3BhY2l0eT0iMC4wNSIvPjwvc3ZnPg==')] opacity-20 mix-blend-overlay"></div>
+           <div className="absolute inset-0 noise-overlay opacity-20 mix-blend-overlay"></div>
            <div className="relative z-10 flex flex-col items-center">
               <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-main mb-8">Ready to Scale?</h2>
               <p className="text-xl text-indigo-200 mb-12 max-w-2xl">Join thousands of creators and agencies using Boost Manager to automate their digital presence.</p>
