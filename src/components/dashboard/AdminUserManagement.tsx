@@ -282,7 +282,7 @@ export function AdminUserManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => openEditModal(user)}
                           className="w-8 h-8 nm-flat rounded-lg flex items-center justify-center text-muted hover:text-indigo-400 hover:nm-concave active:scale-[0.98] active:nm-inset transition-all"

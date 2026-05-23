@@ -426,7 +426,7 @@ export const AdminSystemConfig: React.FC = () => {
                 <MessageCircle size={14} className="text-emerald-400" /> WhatsApp Support Number
               </h4>
               <p className="text-[10px] text-muted mb-3 font-medium">Used for direct customer support links.</p>
-              <div className="flex gap-3 items-center">
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                 <input
                   type="text"
                   value={whatsappNumber}
@@ -450,7 +450,7 @@ export const AdminSystemConfig: React.FC = () => {
             <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
               <DollarSign size={14} className="text-amber-400" /> Custom Platform Rates
             </h4>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
               {Array.from(new Set(allPlatforms)).map(platform => (
                 <div key={platform} className="nm-flat p-4 rounded-xl flex flex-col gap-2">
                   <span className="text-xs font-bold text-zinc-300">{platform}</span>
@@ -472,7 +472,7 @@ export const AdminSystemConfig: React.FC = () => {
               ))}
             </div>
 
-            <div className="flex justify-end items-center gap-4">
+            <div className="flex flex-col sm:flex-row justify-end sm:items-center gap-4">
               {settings?.updated_at && (
                 <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
                   Last updated: {new Date(settings.updated_at).toLocaleString()}
@@ -570,7 +570,7 @@ export const AdminSystemConfig: React.FC = () => {
 
         {/* Add new platform row */}
         <div className="px-6 pt-5 pb-4 border-b border-black/20">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={newPlatformName}
@@ -743,7 +743,7 @@ export const AdminSystemConfig: React.FC = () => {
 
         {/* Add new type row */}
         <div className="px-6 pt-5 pb-4 border-b border-black/20">
-          <div className="flex gap-3">
+          <div className="flex flex-col sm:flex-row gap-3">
             <input
               type="text"
               value={newTypeName}
@@ -860,3 +860,4 @@ export const AdminSystemConfig: React.FC = () => {
     </div>
   );
 };
+

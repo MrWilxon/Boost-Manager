@@ -94,7 +94,7 @@ export const NotificationBell = () => {
   const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative flex items-center justify-center" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="btn-icon relative"
@@ -162,3 +162,4 @@ export const NotificationBell = () => {
     </div>
   );
 };
+

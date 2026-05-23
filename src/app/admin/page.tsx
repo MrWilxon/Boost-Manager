@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { supabase } from '@/src/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { Shield, Users, Rocket, CreditCard, Tag, Activity, Settings } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
@@ -50,8 +51,24 @@ export default function AdminPage() {
   }
 
   // Handle admin actions on tables
-  const handleUpdateStatus = (id: string, status: any) => {
+  const handleUpdateStatus = async (id: string, status: any) => {
+    const req = requests.find(r => r.id === id);
+    if (!req) return;
     setRequests(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+    try {
+      const { error } = await supabase.from('boost_requests').update({ status }).eq('id', id);
+      if (error) throw error;
+      if (req.amountNpr) {
+        if (status === 'Approved' && req.status !== 'Approved') await supabase.rpc('increment_balance', { user_id: req.userId, amount: -req.amountNpr });
+        if (req.status === 'Approved' && status !== 'Approved') await supabase.rpc('increment_balance', { user_id: req.userId, amount: req.amountNpr });
+        if (status === 'Rejected' && req.status !== 'Rejected') await supabase.rpc('increment_balance', { user_id: req.userId, amount: req.amountNpr });
+        if (req.status === 'Rejected' && status !== 'Rejected') await supabase.rpc('increment_balance', { user_id: req.userId, amount: -req.amountNpr });
+      }
+    } catch (e: any) {
+      console.error(e);
+      setRequests(prev => prev.map(r => r.id === id ? { ...r, status: req.status } : r));
+      alert(e.message || "Failed to update status.");
+    }
   };
   const handleDeleteRequest = (req: any) => {
     setRequests(prev => prev.filter(r => r.id !== req.id));
@@ -202,3 +219,7 @@ export default function AdminPage() {
     </div>
   );
 }
+
+
+
+

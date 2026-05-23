@@ -46,7 +46,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const [modalDuration, setModalDuration] = useState(5);
   const [modalNotes, setModalNotes] = useState("");
 
-  const [campaignTypes, setCampaignTypes] = useState<string[]>(["Get Message", "Engagement", "Website Traffic", "Reach"]);
+  const [campaignTypes, setCampaignTypes] = useState<string[]>(["Get Message", "Engagement", "Website Traffic", "Page Likes"]);
 
   const [isCustomLocation, setIsCustomLocation] = useState(false);
   const [customLocation, setCustomLocation] = useState("");
@@ -765,3 +765,4 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     </AnimatePresence>
   );
 };
+

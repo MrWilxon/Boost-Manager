@@ -176,9 +176,11 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                             <Edit size={14} />
                           </button>
                         )}
-                        <button onClick={() => onDelete(req)} className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-rose-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5" title="Delete">
-                          <Trash2 size={14} />
-                        </button>
+                        {(profile?.role === 'Admin' || req.status !== 'Approved') && (
+                          <button onClick={() => onDelete(req)} className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-rose-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5" title="Delete">
+                            <Trash2 size={14} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -246,9 +248,11 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
                         <Edit size={14} />
                       </button>
                     )}
-                    <button onClick={() => onDelete(req)} className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-rose-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5">
-                      <Trash2 size={14} />
-                    </button>
+                    {(profile?.role === 'Admin' || req.status !== 'Approved') && (
+                      <button onClick={() => onDelete(req)} className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-rose-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95] active:nm-inset border border-white/5">
+                        <Trash2 size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </motion.div>

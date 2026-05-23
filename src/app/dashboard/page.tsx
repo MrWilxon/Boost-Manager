@@ -242,6 +242,15 @@ export default function DashboardPage() {
       const { error } = await supabase.from('boost_requests').update({ status }).eq('id', id);
       if (error) throw error;
 
+      // Deduct balance when Approving
+      if (status === 'Approved' && req.status !== 'Approved' && req.amountNpr) {
+        await supabase.rpc('increment_balance', { user_id: req.userId, amount: -req.amountNpr });
+      }
+      // Undo deduction if un-approving
+      if (req.status === 'Approved' && status !== 'Approved' && req.amountNpr) {
+        await supabase.rpc('increment_balance', { user_id: req.userId, amount: req.amountNpr });
+      }
+      
       // Handle balance refund when rejecting
       if (status === 'Rejected' && req.status !== 'Rejected' && req.amountNpr) {
         await supabase.rpc('increment_balance', { user_id: req.userId, amount: req.amountNpr });
@@ -569,3 +578,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
