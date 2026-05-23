@@ -43,6 +43,7 @@ app.use(compression());
 // Secure CORS Configuration
 const allowedOrigins = [
   'http://localhost:3000',
+  'https://boost-manager-one.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean) as string[];
 
