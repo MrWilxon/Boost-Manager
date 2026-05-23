@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { supabase } from '@/src/lib/supabase';
+import { supabase } from '@/src/services/supabase';
 import { useRouter } from 'next/navigation';
 import { Shield, Users, Rocket, CreditCard, Tag, Activity, Settings } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
