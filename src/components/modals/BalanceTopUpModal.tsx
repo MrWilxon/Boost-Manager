@@ -76,7 +76,7 @@ export const BalanceTopUpModal: React.FC<BalanceTopUpModalProps> = ({
                     <Wallet size={18} />
                   </div>
                   <div>
-                    <h3 className="text-lg font-black text-main tracking-tight">Load Capital</h3>
+                    <h3 className="text-lg font-black text-main tracking-tight">Load Balance</h3>
                     <p className="text-[9px] font-black text-muted uppercase tracking-widest">Self Top-up Portal</p>
                   </div>
                 </div>
