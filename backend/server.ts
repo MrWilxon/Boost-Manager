@@ -232,6 +232,12 @@ app.post('/api/delete-request', authMiddleware, async (req, res) => {
   const { requestId } = req.body;
   const reqUser = (req as any).user;
 
+  // 1. Validate UUID format
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!requestId || !uuidRegex.test(requestId)) {
+    return res.status(400).json({ error: 'Invalid Request ID format' });
+  }
+
   try {
     // 2. Fetch the request
     const { data: request, error: reqError } = await supabaseAdmin

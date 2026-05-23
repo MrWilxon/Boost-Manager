@@ -523,7 +523,7 @@ CREATE OR REPLACE FUNCTION public.notify_admin_new_balance()
 RETURNS TRIGGER AS $$
 BEGIN
     INSERT INTO public.notifications (user_id, title, message, type)
-    VALUES (NULL, 'New Balance Load', NEW.username || ' requested a balance load of Rs.' || NEW.amount_npr, 'balance_requested');
+    VALUES (NULL, 'New Balance Load', NEW.username || ' requested a balance load of Rs.' || NEW.amount, 'balance_requested');
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

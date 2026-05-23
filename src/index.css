@@ -53,6 +53,15 @@
     color: var(--text-main);
   }
 
+  /* Global click feedback for ALL buttons */
+  button {
+    transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s, box-shadow 0.2s, border-color 0.2s, color 0.2s !important;
+  }
+  
+  button:not(:disabled):active {
+    transform: scale(0.96) !important;
+  }
+
   /* Custom scrollbar — thin and elegant */
   ::-webkit-scrollbar {
     width: 6px;
