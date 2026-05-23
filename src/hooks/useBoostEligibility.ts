@@ -11,6 +11,7 @@ interface EligibilityParams {
   isCustomAge: boolean;
   customAge: string;
   rate: number;
+  platformRates?: Record<string, number>;
   appliedPromo: PromoCode | null;
   profile: UserProfile | null;
 }
@@ -26,13 +27,28 @@ export const useBoostEligibility = (params: EligibilityParams) => {
     isCustomAge,
     customAge,
     rate,
+    platformRates,
     appliedPromo,
     profile
   } = params;
 
   return useMemo(() => {
     const currentRate = rate || 165;
-    let effectiveRate = currentRate;
+    let baseRate = currentRate;
+    
+    let maxPlatformRate = currentRate;
+    let rateConflict = false;
+    if (platformRates && selectedPlatforms.length > 0) {
+      const rates = selectedPlatforms.map(p => platformRates[p] || currentRate);
+      maxPlatformRate = Math.max(...rates);
+      const uniqueRates = new Set(rates);
+      if (uniqueRates.size > 1) {
+        rateConflict = true;
+      }
+      baseRate = maxPlatformRate;
+    }
+
+    let effectiveRate = baseRate;
     let discountPercent = 0;
     let fixedDiscount = 0;
 
@@ -123,6 +139,17 @@ export const useBoostEligibility = (params: EligibilityParams) => {
       });
     }
 
+    if (rateConflict) {
+      warnings.push({
+        type: "info",
+        message: `Multiple platforms selected with varying rates. The highest rate ($1 = रू${maxPlatformRate}) is applied.`,
+      });
+    }
+
+    const estimatedReachMin = Math.floor(totalBudget * 500);
+    const estimatedReachMax = Math.floor(totalBudget * 1200);
+    const estimatedReach = `${estimatedReachMin.toLocaleString()} - ${estimatedReachMax.toLocaleString()} accounts`;
+
     return {
       isEligible: !warnings.some((w) => w.type === "error"),
       hasSeriousWarnings: warnings.some((w) => w.type === "error" || w.type === "warning"),
@@ -130,11 +157,13 @@ export const useBoostEligibility = (params: EligibilityParams) => {
       totalNpr,
       effectiveRate,
       discountApplied: discountPercent > 0 || fixedDiscount > 0 || effectiveRate !== rate,
+      estimatedReach,
     };
   }, [
     modalBudget,
     modalDuration,
     rate,
+    platformRates,
     profile?.balance,
     modalUrl,
     modalAdGoal,

@@ -23,22 +23,25 @@ import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/src/services/supabase";
 import { useAuth } from "@/src/context/AuthContext";
 import { Navbar } from '@/src/components/layout/Navbar';
-import { Analytics } from "@/src/components/dashboard/Analytics";
-import { AdminUserManagement } from "@/src/components/dashboard/AdminUserManagement";
-import { BoostRequestTable } from "@/src/components/dashboard/BoostRequestTable";
-import { BalanceRequestTable } from "@/src/components/dashboard/BalanceRequestTable";
-import { BoostRequestModal } from "@/src/components/modals/BoostRequestModal";
-import { BalanceTopUpModal } from "@/src/components/modals/BalanceTopUpModal";
+import dynamic from 'next/dynamic';
+
+const Analytics = dynamic(() => import("@/src/components/dashboard/Analytics").then(m => m.Analytics), { ssr: false });
+const AdminUserManagement = dynamic(() => import("@/src/components/dashboard/AdminUserManagement").then(m => m.AdminUserManagement), { ssr: false });
+const BoostRequestTable = dynamic(() => import("@/src/components/dashboard/BoostRequestTable").then(m => m.BoostRequestTable), { ssr: false });
+const BalanceRequestTable = dynamic(() => import("@/src/components/dashboard/BalanceRequestTable").then(m => m.BalanceRequestTable), { ssr: false });
+const BoostRequestModal = dynamic(() => import("@/src/components/modals/BoostRequestModal").then(m => m.BoostRequestModal), { ssr: false });
+const BalanceTopUpModal = dynamic(() => import("@/src/components/modals/BalanceTopUpModal").then(m => m.BalanceTopUpModal), { ssr: false });
+const DeleteConfirmationModal = dynamic(() => import("@/src/components/modals/DeleteConfirmationModal").then(m => m.DeleteConfirmationModal), { ssr: false });
+const OnboardingTour = dynamic(() => import("@/src/components/dashboard/shared/OnboardingTour").then(m => m.OnboardingTour), { ssr: false });
 import { StatCard, StatusBadge } from "@/src/components/dashboard/shared/DashboardComponents";
-import { DeleteConfirmationModal } from "@/src/components/modals/DeleteConfirmationModal";
-import { OnboardingTour } from "@/src/components/dashboard/shared/OnboardingTour";
 import { useDashboardData } from "@/src/hooks/useDashboardData";
 import { BoostRequest, BalanceRequest, RequestStatus } from "@/src/types";
 import { generateBoostInvoice, generateTopupInvoice } from "@/src/utils/pdfGenerator";
+import DashboardLoading from './loading';
 
 type TabType = "requests" | "analytics" | "users" | "balance";
 
-function DashboardLoader() {
+function DashboardLoader({ isProfileMissing = false }: { isProfileMissing?: boolean }) {
   const [showHint, setShowHint] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setShowHint(true), 5000);
@@ -52,7 +55,26 @@ function DashboardLoader() {
         <div className="absolute inset-0 rounded-full bg-indigo-500/10 animate-ping" suppressHydrationWarning />
       </div>
       <p className="text-[10px] font-black text-muted uppercase tracking-[0.2em]" suppressHydrationWarning>Initializing Engine...</p>
-      {showHint && (
+      
+      {isProfileMissing && showHint && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-2 mt-4 max-w-sm text-center px-4"
+        >
+          <div className="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl text-rose-400 text-xs font-medium">
+            We couldn't fetch your profile data. Please try logging out and logging back in, or contact support if the issue persists.
+          </div>
+          <button
+            onClick={() => supabase.auth.signOut().then(() => window.location.href = '/login')}
+            className="text-[10px] font-black text-rose-400 hover:text-rose-300 uppercase tracking-widest transition-colors cursor-pointer mt-2"
+          >
+            Logout & Try Again
+          </button>
+        </motion.div>
+      )}
+
+      {showHint && !isProfileMissing && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -113,27 +135,46 @@ export default function DashboardPage() {
 
   // Admin Settings State
   const [rate, setRate] = useState<number>(135); // default, will be overridden by app settings
+  const [platformRates, setPlatformRates] = useState<Record<string, number>>({});
   const [whatsappNumber, setWhatsappNumber] = useState<string>("+977-9843398340");
 
   // Fetch dynamic exchange rate from backend (avoids RLS)
   useEffect(() => {
-    const fetchRate = async () => {
+    const fetchSettings = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
         const res = await fetch(`${apiUrl}/api/settings/app`);
         if (!res.ok) throw new Error('Failed to fetch from backend');
         const { data } = await res.json();
-        if (data && data.exchange_rate) setRate(Number(data.exchange_rate));
+        
+        if (data) {
+          if (data.exchange_rate) setRate(Number(data.exchange_rate));
+          
+          if (data.whatsapp_number) {
+            setWhatsappNumber(data.whatsapp_number);
+          } else {
+            const savedWhatsApp = localStorage.getItem('whatsapp_number');
+            if (savedWhatsApp) setWhatsappNumber(savedWhatsApp);
+          }
+
+          if (data.allowed_platforms) {
+            setAllowedPlatforms(Array.from(new Set(data.allowed_platforms)));
+          } else {
+            const saved = localStorage.getItem('allowed_platforms');
+            if (saved) {
+              try { setAllowedPlatforms(JSON.parse(saved)); } catch (e) {}
+            }
+          }
+          
+          if (data.platform_rates) {
+            setPlatformRates(data.platform_rates);
+          }
+        }
       } catch (error) {
-        console.error('Failed to fetch exchange rate', error);
+        console.error('Failed to fetch app settings', error);
       }
     };
-    fetchRate();
-    
-    const savedWhatsApp = localStorage.getItem('whatsapp_number');
-    if (savedWhatsApp) {
-      setWhatsappNumber(savedWhatsApp);
-    }
+    fetchSettings();
   }, []);
 
   const handleUpdateRate = async (newRate: number) => {
@@ -167,13 +208,6 @@ export default function DashboardPage() {
   const [pageRoleInfo, setPageRoleInfo] = useState<string>("fb.com/admin_profile");
   const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>(["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]);
   const [adminAlertMessage, setAdminAlertMessage] = useState<string>("");
-
-  useEffect(() => {
-    const saved = localStorage.getItem('allowed_platforms');
-    if (saved) {
-      try { setAllowedPlatforms(JSON.parse(saved)); } catch (e) {}
-    }
-  }, []);
 
   const handleUpdateAllowedPlatforms = (platforms: string[]) => {
     setAllowedPlatforms(platforms);
@@ -312,8 +346,23 @@ export default function DashboardPage() {
     });
   }, [requests, searchQuery, platformFilter, filterStatus]);
 
-  if (authLoading || !user || !profile) {
-    return <DashboardLoader />;
+
+// We allow the shell to render even while loading, for better FCP
+  const isDataLoading = authLoading || !user || !profile || dataLoading;
+
+  if (isDataLoading) {
+    return (
+      <div className="min-h-screen bg-surface text-main font-sans selection:bg-indigo-500/30 pb-24 lg:pb-8">
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-900/10 blur-[120px] mix-blend-screen" />
+          <div className="absolute inset-0 noise-overlay opacity-20 mix-blend-overlay"></div>
+        </div>
+        <div className="relative z-10">
+          <Navbar onSettings={() => {}} />
+          <DashboardLoading />
+        </div>
+      </div>
+    );
   }
 
   const tabs = [
@@ -348,20 +397,11 @@ export default function DashboardPage() {
           <div>
             <h1 className="text-4xl font-black tracking-tight text-main">Command Center</h1>
             <p className="text-muted text-sm font-medium mt-1">
-              Active Session: <span className="text-indigo-400 font-bold">{profile.username}</span>
+              Active Session: <span className="text-indigo-400 font-bold">{profile?.username || 'Loading...'}</span>
             </p>
           </div>
 
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
-            {profile?.role === 'Admin' && (
-              <button
-                onClick={() => router.push('/admin')}
-                className="w-10 h-10 nm-flat hover:nm-concave rounded-xl flex items-center justify-center text-rose-500 transition-all active:scale-95"
-                title="Admin Console"
-              >
-                <Shield size={18} />
-              </button>
-            )}
             <button
               onClick={() => setIsLoadMoneyModalOpen(true)}
               className="tour-step-balance btn-success px-5 py-3 rounded-xl flex items-center gap-2"
@@ -381,7 +421,7 @@ export default function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-          <StatCard title="Balance" value={`रू ${(profile.balance || 0).toLocaleString()}`} icon={<Wallet size={22} />} color="emerald" gradient={true} />
+          <StatCard title="Balance" value={`रू ${(profile?.balance || 0).toLocaleString()}`} icon={<Wallet size={22} />} color="emerald" gradient={true} />
           <StatCard title="Total Campaigns" value={stats.total} icon={<LayoutDashboard size={22} />} color="indigo" />
           <StatCard title="Approved" value={stats.approved} icon={<CheckCircle2 size={22} />} color="emerald" />
           <StatCard title="Pending" value={stats.pending} icon={<Clock size={22} />} color="amber" />
@@ -483,9 +523,11 @@ export default function DashboardPage() {
       <BoostRequestModal
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setEditingRequest(null); }}
+        rate={rate}
+        platformRates={platformRates}
+        whatsappNumber={whatsappNumber}
         profile={profile}
         user={user}
-        rate={rate}
         editingRequestId={editingRequest?.id || null}
         onSuccess={showNotification}
         requests={requests}

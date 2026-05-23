@@ -1,5 +1,4 @@
 export const ALL_PLATFORMS = [
-  "All Platforms",
   "Facebook",
   "Instagram",
   "TikTok",
@@ -15,7 +14,6 @@ export const APP_CONFIG = {
     LOCATION: 'Kathmandu, Nepal'
   },
   PLATFORMS: [
-    "All Platforms",
     "Facebook",
     "Instagram",
     "TikTok",

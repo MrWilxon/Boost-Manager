@@ -86,10 +86,10 @@ export const BalanceRequestTable: React.FC<BalanceRequestTableProps> = ({
                 <td className="px-6 py-5 font-bold text-main">
                   <div className="flex flex-col">
                     <span>{req.username}</span>
-                    {profile?.role === 'Admin' && <span className="text-[9px] text-muted font-mono mt-0.5">{req.user_id?.slice(0, 8)}</span>}
+                    {profile?.role === 'Admin' && <span className="text-[9px] text-muted font-mono mt-0.5">{req.userId?.slice(0, 8)}</span>}
                   </div>
                 </td>
-                <td className="px-6 py-5 text-xs font-bold text-muted">{new Date(req.created_at || Date.now()).toLocaleDateString()}</td>
+                <td className="px-6 py-5 text-xs font-bold text-muted">{new Date(req.date || Date.now()).toLocaleDateString()}</td>
                 <td className="px-6 py-5">
                   <span className="text-emerald-400 font-black tracking-wide drop-shadow-[0_0_5px_rgba(16,185,129,0.2)]">
                     रू{req.amount?.toLocaleString()}

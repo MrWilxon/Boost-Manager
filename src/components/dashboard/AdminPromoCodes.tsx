@@ -17,6 +17,7 @@ export const AdminPromoCodes = () => {
   const [value, setValue] = useState('');
   const [maxUsage, setMaxUsage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const fetchPromoCodes = async () => {
     try {
@@ -39,7 +40,7 @@ export const AdminPromoCodes = () => {
     fetchPromoCodes();
   }, []);
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCode || !value) return;
 
@@ -55,15 +56,25 @@ export const AdminPromoCodes = () => {
       
       if (maxUsage) {
         payload.max_usage = Number(maxUsage);
+      } else {
+        payload.max_usage = null;
       }
 
-      const { error: insertErr } = await supabase
-        .from('promo_codes')
-        .insert([payload]);
-
-      if (insertErr) throw insertErr;
+      if (editingId) {
+        const { error: updateErr } = await supabase
+          .from('promo_codes')
+          .update(payload)
+          .eq('id', editingId);
+        if (updateErr) throw updateErr;
+      } else {
+        const { error: insertErr } = await supabase
+          .from('promo_codes')
+          .insert([payload]);
+        if (insertErr) throw insertErr;
+      }
 
       // Reset form
+      setEditingId(null);
       setNewCode('');
       setValue('');
       setMaxUsage('');
@@ -72,9 +83,29 @@ export const AdminPromoCodes = () => {
       // Refresh list
       await fetchPromoCodes();
     } catch (err: any) {
-      setError(err.message || "Failed to create promo code");
+      setError(err.message || "Failed to save promo code");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const startEdit = (code: any) => {
+    setEditingId(code.id);
+    setNewCode(code.code);
+    setDiscountType(code.discount_type);
+    setValue(String(code.value));
+    setMaxUsage(code.max_usage ? String(code.max_usage) : '');
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this promo code?')) return;
+    try {
+      const { error: deleteErr } = await supabase.from('promo_codes').delete().eq('id', id);
+      if (deleteErr) throw deleteErr;
+      setPromoCodes(prev => prev.filter(p => p.id !== id));
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete promo code');
     }
   };
 
@@ -107,7 +138,15 @@ export const AdminPromoCodes = () => {
           <p className="text-sm text-muted">Manage discount codes and promotional offers.</p>
         </div>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            setShowForm(!showForm);
+            if (showForm) {
+              setEditingId(null);
+              setNewCode('');
+              setValue('');
+              setMaxUsage('');
+            }
+          }}
           className="btn-primary"
         >
           {showForm ? <X size={18} /> : <Plus size={18} />}
@@ -131,8 +170,10 @@ export const AdminPromoCodes = () => {
             exit={{ height: 0, opacity: 0 }}
             className="overflow-hidden"
           >
-            <form onSubmit={handleCreate} className="nm-flat p-6 rounded-2xl border border-white/5 space-y-4 mb-6">
-              <h3 className="text-sm font-bold text-main uppercase tracking-widest mb-4">Create New Promo Code</h3>
+            <form onSubmit={handleSave} className="nm-flat p-6 rounded-2xl border border-white/5 space-y-4 mb-6">
+              <h3 className="text-sm font-bold text-main uppercase tracking-widest mb-4">
+                {editingId ? 'Edit Promo Code' : 'Create New Promo Code'}
+              </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -189,7 +230,7 @@ export const AdminPromoCodes = () => {
               
               <div className="flex justify-end pt-2">
                 <button type="submit" disabled={isSubmitting} className="btn-primary">
-                  {isSubmitting ? "Creating..." : "Save Promo Code"}
+                  {isSubmitting ? "Saving..." : "Save Promo Code"}
                 </button>
               </div>
             </form>
@@ -257,14 +298,29 @@ export const AdminPromoCodes = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleToggleActive(code.id, code.is_active)}
-                        className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all ${
-                          code.is_active ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'
-                        }`}
-                      >
-                        {code.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleToggleActive(code.id, code.is_active)}
+                          className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all ${
+                            code.is_active ? 'text-amber-500 hover:bg-amber-500/10' : 'text-emerald-500 hover:bg-emerald-500/10'
+                          }`}
+                        >
+                          {code.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                        <button
+                          onClick={() => startEdit(code)}
+                          className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-indigo-400 hover:bg-indigo-400/10 transition-all"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(code.id)}
+                          className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors"
+                          title="Delete Promo Code"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

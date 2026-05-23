@@ -3,7 +3,7 @@ import { BoostRequest, BalanceRequest } from '@/src/types';
 
 export const generateBoostInvoice = (request: BoostRequest) => {
   const doc = new jsPDF();
-  const date = new Date(request.created_at || Date.now()).toLocaleDateString();
+  const date = new Date(request.createdAt || request.date || Date.now()).toLocaleDateString();
   const invoiceId = `INV-BST-${request.id.slice(0, 8).toUpperCase()}`;
 
   // Header
@@ -51,16 +51,16 @@ export const generateBoostInvoice = (request: BoostRequest) => {
   // Table Content
   doc.setTextColor(50, 50, 50);
   doc.setFontSize(11);
-  const description = `${request.platform} Campaign - ${request.type === 'Page Likes/Followers' ? 'Followers' : 'Views'}: ${request.amount}`;
+  const description = `${request.platform} Campaign - ${request.adGoal}: Budget $${request.budget}`;
   doc.text(description, 18, 130);
-  doc.text(`रू ${request.price.toLocaleString()}`, 160, 130);
+  doc.text(`रू ${request.amountNpr?.toLocaleString() || 0}`, 160, 130);
 
   // Total
   doc.line(14, 140, 196, 140);
   doc.setFont('helvetica', 'bold');
   doc.text('Total Paid:', 120, 150);
   doc.setTextColor(99, 102, 241); // Indigo
-  doc.text(`रू ${request.price.toLocaleString()}`, 160, 150);
+  doc.text(`रू ${request.amountNpr?.toLocaleString() || 0}`, 160, 150);
 
   // Footer
   doc.setFont('helvetica', 'normal');
@@ -73,7 +73,7 @@ export const generateBoostInvoice = (request: BoostRequest) => {
 
 export const generateTopupInvoice = (request: BalanceRequest) => {
   const doc = new jsPDF();
-  const date = new Date(request.created_at || Date.now()).toLocaleDateString();
+  const date = new Date(request.date || request.timestamp || Date.now()).toLocaleDateString();
   const invoiceId = `INV-TOP-${request.id.slice(0, 8).toUpperCase()}`;
 
   // Header

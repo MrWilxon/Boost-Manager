@@ -41,8 +41,6 @@ export default function Home() {
   
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) return null;
-
   return (
     <div className="min-h-screen bg-black text-main selection:bg-indigo-500/30 font-sans overflow-x-hidden">
       {/* Dynamic Background */}

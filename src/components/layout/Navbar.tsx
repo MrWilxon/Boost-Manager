@@ -1,10 +1,10 @@
 'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { LogOut, User as UserIcon, Rocket, Sun, Moon, Menu, X } from 'lucide-react';
+import { LogOut, User as UserIcon, Rocket, Sun, Moon, Menu, X, Shield } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface NavbarProps {
   onLoadMoney?: () => void;
@@ -13,9 +13,12 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { profile, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const isAdminPage = pathname === '/admin';
 
     return (
     <header className="sticky top-4 z-50 mx-4 md:mx-8 mb-6 nm-flat px-4 md:px-8 py-3.5 rounded-2xl transition-all duration-300">
@@ -48,9 +51,9 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
 
           <div className="flex items-center gap-2">
             {profile && profile.role === 'Admin' && (
-              <Link href="/admin" className="hidden md:flex items-center gap-2 nm-flat text-amber-500 hover:text-amber-400 hover:nm-concave active:scale-[0.98] active:nm-inset rounded-xl px-3.5 py-2 font-black text-[10px] uppercase tracking-widest transition-all duration-300">
-                <Rocket size={14} />
-                Admin
+              <Link href={isAdminPage ? "/dashboard" : "/admin"} className="hidden md:flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.15)] text-amber-500 hover:text-amber-400 hover:bg-amber-500/20 active:scale-[0.98] rounded-xl px-3.5 py-2 font-black text-[10px] uppercase tracking-widest transition-all duration-300">
+                <Shield size={14} />
+                {isAdminPage ? "Dashboard" : "Admin"}
               </Link>
             )}
             
@@ -119,12 +122,12 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
 
           {profile && profile.role === 'Admin' && (
             <Link 
-              href="/admin" 
+              href={isAdminPage ? "/dashboard" : "/admin"} 
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 nm-flat rounded-xl p-3 text-amber-500 font-bold active:nm-inset transition-all"
+              className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)] rounded-xl p-3 text-amber-500 font-bold active:bg-amber-500/20 transition-all"
             >
-              <Rocket size={18} />
-              Admin Dashboard
+              <Shield size={18} />
+              {isAdminPage ? "Command Center" : "Admin Dashboard"}
             </Link>
           )}
 

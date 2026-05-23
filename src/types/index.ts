@@ -9,7 +9,9 @@ export interface UserProfile {
   username: string;
   profilePic?: string;
   profile_pic?: string;
+  avatarUrl?: string;
   whatsapp?: string;
+  businessName?: string;
   joinDate?: any;
 }
 

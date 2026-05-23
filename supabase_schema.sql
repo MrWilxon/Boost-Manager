@@ -392,7 +392,7 @@ CREATE OR REPLACE TRIGGER on_balance_request_updated
 CREATE OR REPLACE FUNCTION public.enforce_profile_security()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NOT public.is_admin() THEN
+    IF NOT public.is_admin() AND pg_trigger_depth() = 1 THEN
         IF old.balance != new.balance OR old.role != new.role THEN
             RAISE EXCEPTION 'You are not authorized to directly modify balance or role fields.';
         END IF;
@@ -429,6 +429,9 @@ CREATE TABLE IF NOT EXISTS public.app_settings (
     id TEXT PRIMARY KEY,
     exchange_rate NUMERIC(12,2) NOT NULL DEFAULT 135,
     whatsapp_number TEXT NOT NULL DEFAULT '+977-9843398340',
+    allowed_platforms JSONB DEFAULT '["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]'::jsonb,
+    all_platforms JSONB DEFAULT '["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]'::jsonb,
+    platform_rates JSONB DEFAULT '{}'::jsonb,
     created_at TIMESTAMPTZ DEFAULT now() NOT NULL,
     updated_at TIMESTAMPTZ DEFAULT now()
 );

@@ -1,11 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { CallBackProps, STATUS, Step, EVENTS, ACTIONS } from 'react-joyride';
+import { STATUS, Step } from 'react-joyride';
 import dynamic from 'next/dynamic';
 import { useAuth } from '../../../context/AuthContext';
 
-const Joyride = dynamic(() => import('react-joyride').then((mod: any) => mod.Joyride), { ssr: false });
+const Joyride = dynamic(() => import('react-joyride').then((mod: any) => mod.default || mod.Joyride || mod), { ssr: false }) as any;
 
 // ── helpers ────────────────────────────────────────────────────────────────────
 /** Returns true when ALL of the given CSS selectors exist in the DOM */
@@ -79,7 +79,6 @@ export const OnboardingTour = () => {
     {
       target: 'body',
       placement: 'center',
-      disableBeacon: true,
       content: (
         <div className="text-left font-sans">
           <h2 className="text-xl font-black mb-2 text-[#1A1C1E]">Welcome to Boost Manager! 🚀</h2>
@@ -92,8 +91,7 @@ export const OnboardingTour = () => {
     {
       target: '.tour-step-balance',
       placement: 'bottom',
-      disableBeacon: true,
-      spotlightClicks: false,
+
       content: (
         <div className="text-left font-sans">
           <h3 className="text-lg font-black text-[#1A1C1E] mb-1">1. Add Balance</h3>
@@ -106,8 +104,7 @@ export const OnboardingTour = () => {
     {
       target: '.tour-step-campaign',
       placement: 'bottom',
-      disableBeacon: true,
-      spotlightClicks: false,
+
       content: (
         <div className="text-left font-sans">
           <h3 className="text-lg font-black text-[#1A1C1E] mb-1">2. Create Campaign</h3>
@@ -123,8 +120,7 @@ export const OnboardingTour = () => {
           {
             target: '.tour-step-settings',
             placement: 'bottom' as const,
-            disableBeacon: true,
-            spotlightClicks: false,
+      
             content: (
               <div className="text-left font-sans">
                 <h3 className="text-lg font-black text-[#1A1C1E] mb-1">3. Profile Settings</h3>
@@ -142,8 +138,7 @@ export const OnboardingTour = () => {
           {
             target: '.tour-step-wallet',
             placement: 'bottom' as const,
-            disableBeacon: true,
-            spotlightClicks: false,
+      
             content: (
               <div className="text-left font-sans">
                 <h3 className="text-lg font-black text-[#1A1C1E] mb-1">{isMobile ? '3' : '4'}. Your Wallet</h3>
@@ -158,7 +153,6 @@ export const OnboardingTour = () => {
     {
       target: 'body',
       placement: 'center',
-      disableBeacon: true,
       content: (
         <div className="text-left font-sans">
           <h2 className="text-xl font-black mb-2 text-[#1A1C1E]">You&apos;re all set! 🎉</h2>
@@ -170,7 +164,7 @@ export const OnboardingTour = () => {
     },
   ];
 
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleJoyrideCallback = (data: any) => {
     const { status } = data;
 
     // Tour completed or skipped → mark as done

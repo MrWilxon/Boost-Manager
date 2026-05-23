@@ -13,6 +13,10 @@ import { ALL_PLATFORMS } from '../../constants';
 interface AppSettings {
   id: string;
   exchange_rate: number;
+  whatsapp_number?: string;
+  allowed_platforms?: string[];
+  all_platforms?: string[];
+  platform_rates?: Record<string, number>;
   updated_at: string;
 }
 
@@ -34,18 +38,26 @@ export const AdminSystemConfig: React.FC = () => {
   // ── App Settings state ──────────────────────────────────────────────────────
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [exchangeRate, setExchangeRate] = useState<string>('');
+  const [platformRates, setPlatformRates] = useState<Record<string, string>>({});
   const [savingSettings, setSavingSettings] = useState(false);
 
   // ── LocalStorage state ──────────────────────────────────────────────────────
   const [whatsappNumber, setWhatsappNumber] = useState<string>('');
   const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>([]);
+  const [allPlatforms, setAllPlatforms] = useState<string[]>(ALL_PLATFORMS);
   const [isDataSaver, setIsDataSaver] = useState<boolean>(false);
+  const [newPlatformName, setNewPlatformName] = useState('');
+  const [addingPlatform, setAddingPlatform] = useState(false);
+  const [editingPlatform, setEditingPlatform] = useState<string | null>(null);
+  const [editPlatformName, setEditPlatformName] = useState('');
 
   // ── Campaign Types state ─────────────────────────────────────────────────────
   const [campaignTypes, setCampaignTypes] = useState<CampaignType[]>([]);
   const [newTypeName, setNewTypeName] = useState('');
   const [addingType, setAddingType] = useState(false);
   const [loadingTypes, setLoadingTypes] = useState(true);
+  const [editingType, setEditingType] = useState<string | null>(null);
+  const [editTypeName, setEditTypeName] = useState('');
 
   // ── UI state ─────────────────────────────────────────────────────────────────
   const [loading, setLoading] = useState(true);
@@ -71,6 +83,16 @@ export const AdminSystemConfig: React.FC = () => {
       if (settingsData) {
         setSettings(settingsData);
         setExchangeRate(String(settingsData.exchange_rate));
+        if (settingsData.whatsapp_number) setWhatsappNumber(settingsData.whatsapp_number);
+        if (settingsData.allowed_platforms) setAllowedPlatforms(Array.from(new Set(settingsData.allowed_platforms)));
+        if (settingsData.all_platforms) setAllPlatforms(Array.from(new Set(settingsData.all_platforms)));
+        
+        if (settingsData.platform_rates) {
+          const ratesStr = Object.fromEntries(
+            Object.entries(settingsData.platform_rates).map(([k, v]) => [k, String(v)])
+          );
+          setPlatformRates(ratesStr);
+        }
       } else {
         // Seed default row if it doesn't exist yet
         const { data: inserted } = await supabase
@@ -81,6 +103,16 @@ export const AdminSystemConfig: React.FC = () => {
         if (inserted) {
           setSettings(inserted);
           setExchangeRate(String(inserted.exchange_rate));
+          if (inserted.whatsapp_number) setWhatsappNumber(inserted.whatsapp_number);
+          if (inserted.allowed_platforms) setAllowedPlatforms(Array.from(new Set(inserted.allowed_platforms)));
+          if (inserted.all_platforms) setAllPlatforms(Array.from(new Set(inserted.all_platforms)));
+          
+          if (inserted.platform_rates) {
+            const ratesStr = Object.fromEntries(
+              Object.entries(inserted.platform_rates).map(([k, v]) => [k, String(v)])
+            );
+            setPlatformRates(ratesStr);
+          }
         }
       }
 
@@ -92,18 +124,7 @@ export const AdminSystemConfig: React.FC = () => {
 
       setCampaignTypes(typesData || []);
 
-      // Load local storage items
-      const savedWhatsApp = localStorage.getItem('whatsapp_number');
-      if (savedWhatsApp) setWhatsappNumber(savedWhatsApp);
-      else setWhatsappNumber('+977-9843398340');
-
-      const savedPlatforms = localStorage.getItem('allowed_platforms');
-      if (savedPlatforms) {
-        try { setAllowedPlatforms(JSON.parse(savedPlatforms)); } catch (e) {}
-      } else {
-        setAllowedPlatforms(["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]);
-      }
-
+      // Load local storage items for data saver
       setIsDataSaver(localStorage.getItem('data_saver') === 'true');
 
     } catch (err) {
@@ -126,36 +147,78 @@ export const AdminSystemConfig: React.FC = () => {
       showToast('error', 'Please enter a valid positive dollar rate.');
       return;
     }
+    
+    // Parse platform rates
+    const parsedPlatformRates: Record<string, number> = {};
+    for (const [platform, val] of Object.entries(platformRates)) {
+      const pRate = parseFloat(val);
+      if (!isNaN(pRate) && pRate > 0) {
+        parsedPlatformRates[platform] = pRate;
+      }
+    }
+
     setSavingSettings(true);
     try {
       const { error } = await supabase
         .from('app_settings')
-        .upsert({ id: 'global', exchange_rate: rate, updated_at: new Date().toISOString() });
+        .upsert({ 
+          id: 'global', 
+          exchange_rate: rate, 
+          platform_rates: parsedPlatformRates,
+          updated_at: new Date().toISOString() 
+        });
       if (error) throw error;
-      setSettings(prev => prev ? { ...prev, exchange_rate: rate } : prev);
-      showToast('success', 'Dollar rate saved successfully!');
+      setSettings(prev => prev ? { ...prev, exchange_rate: rate, platform_rates: parsedPlatformRates } : prev);
+      showToast('success', 'Exchange rates saved successfully!');
     } catch (err: any) {
-      showToast('error', err.message || 'Failed to save dollar rate.');
+      showToast('error', err.message || 'Failed to save rates.');
     } finally {
       setSavingSettings(false);
     }
   };
 
   // ── Save WhatsApp Number ──────────────────────────────────────────────────────
-  const handleSaveWhatsApp = () => {
+  const handleSaveWhatsApp = async () => {
     if (!whatsappNumber.trim()) {
       showToast('error', 'Please enter a valid WhatsApp number.');
       return;
     }
-    localStorage.setItem('whatsapp_number', whatsappNumber);
-    window.dispatchEvent(new Event('whatsapp_updated'));
-    showToast('success', 'WhatsApp support number updated!');
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert({ id: 'global', whatsapp_number: whatsappNumber, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      showToast('success', 'WhatsApp support number updated globally!');
+    } catch (err: any) {
+      showToast('error', err.message || 'Failed to save WhatsApp number.');
+    }
   };
 
   // ── Save Allowed Platforms ───────────────────────────────────────────────────
-  const handleSavePlatforms = () => {
-    localStorage.setItem('allowed_platforms', JSON.stringify(allowedPlatforms));
-    showToast('success', 'Active campaign platforms updated!');
+  const handleSavePlatforms = async () => {
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert({ id: 'global', allowed_platforms: allowedPlatforms, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      showToast('success', 'Active campaign platforms updated globally!');
+    } catch (err: any) {
+      showToast('error', err.message || 'Failed to save allowed platforms.');
+    }
+  };
+
+  // ── Save Master Platforms ────────────────────────────────────────────────────
+  const updateMasterPlatforms = async (newAllPlatforms: string[]) => {
+    setAllPlatforms(newAllPlatforms);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert({ id: 'global', all_platforms: newAllPlatforms, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      showToast('success', 'Master platform list saved!');
+    } catch (err: any) {
+      showToast('error', err.message || 'Failed to save master platforms.');
+    }
   };
 
   // ── Toggle Data Saver ────────────────────────────────────────────────────────
@@ -202,6 +265,26 @@ export const AdminSystemConfig: React.FC = () => {
       showToast('error', err.message || 'Failed to add campaign type.');
     } finally {
       setAddingType(false);
+    }
+  };
+
+  // ── Edit campaign type ───────────────────────────────────────────────────────
+  const handleEditType = async (id: string) => {
+    const name = editTypeName.trim();
+    if (!name) return;
+    try {
+      const { error } = await supabase
+        .from('campaign_types')
+        .update({ name })
+        .eq('id', id);
+      if (error) throw error;
+      setCampaignTypes(prev =>
+        prev.map(t => t.id === id ? { ...t, name } : t)
+      );
+      setEditingType(null);
+      showToast('success', 'Campaign type updated successfully.');
+    } catch (err: any) {
+      showToast('error', err.message || 'Failed to update campaign type.');
     }
   };
 
@@ -310,72 +393,103 @@ export const AdminSystemConfig: React.FC = () => {
         </div>
 
         {/* Card Body */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-          
-          {/* Dollar Rate */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 pb-8 border-b border-white/5">
+            {/* Dollar Rate */}
+            <div>
+              <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+                <DollarSign size={14} className="text-amber-400" /> Default / Base Dollar Rate (NPR per $1)
+              </h4>
+              <p className="text-[10px] text-muted mb-3 font-medium">This rate is used as a fallback if a platform doesn't have a specific rate.</p>
+              <div className="flex gap-3 items-center">
+                <div className="relative flex-1">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400 font-black text-sm pointer-events-none">
+                    रू
+                  </span>
+                  <input
+                    type="number"
+                    min="1"
+                    step="0.01"
+                    value={exchangeRate}
+                    onChange={e => setExchangeRate(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSaveSettings()}
+                    className="w-full pl-10 pr-4 py-3.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-amber-500 transition-all font-black text-sm placeholder-muted focus:ring-2 focus:ring-amber-500/15"
+                    placeholder="135"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* WhatsApp Support */}
+            <div>
+              <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+                <MessageCircle size={14} className="text-emerald-400" /> WhatsApp Support Number
+              </h4>
+              <p className="text-[10px] text-muted mb-3 font-medium">Used for direct customer support links.</p>
+              <div className="flex gap-3 items-center">
+                <input
+                  type="text"
+                  value={whatsappNumber}
+                  onChange={e => setWhatsappNumber(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveWhatsApp()}
+                  className="flex-1 px-4 py-3.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-emerald-500 transition-all font-black text-sm placeholder-muted focus:ring-2 focus:ring-emerald-500/15"
+                  placeholder="+977-9843398340"
+                />
+                <button
+                  onClick={handleSaveWhatsApp}
+                  className="flex items-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] cursor-pointer active:scale-[0.97]"
+                >
+                  <Save size={14} /> Set
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Per-Platform Rates */}
           <div>
             <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
-              <DollarSign size={14} className="text-amber-400" /> Dollar Rate (NPR per $1)
+              <DollarSign size={14} className="text-amber-400" /> Custom Platform Rates
             </h4>
-            <div className="flex gap-3 items-center">
-              <div className="relative flex-1">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400 font-black text-sm pointer-events-none">
-                  रू
-                </span>
-                <input
-                  type="number"
-                  min="1"
-                  step="0.01"
-                  value={exchangeRate}
-                  onChange={e => setExchangeRate(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSaveSettings()}
-                  className="w-full pl-10 pr-4 py-3.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-amber-500 transition-all font-black text-sm placeholder-muted focus:ring-2 focus:ring-amber-500/15"
-                  placeholder="135"
-                />
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+              {Array.from(new Set(allPlatforms)).map(platform => (
+                <div key={platform} className="nm-flat p-4 rounded-xl flex flex-col gap-2">
+                  <span className="text-xs font-bold text-zinc-300">{platform}</span>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted font-bold text-xs pointer-events-none">
+                      रू
+                    </span>
+                    <input
+                      type="number"
+                      min="1"
+                      step="0.01"
+                      value={platformRates[platform] || ''}
+                      onChange={e => setPlatformRates(prev => ({ ...prev, [platform]: e.target.value }))}
+                      className="w-full pl-8 pr-3 py-2 nm-inset rounded-lg text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-amber-500 transition-all font-bold text-xs placeholder-muted"
+                      placeholder={`Default (${exchangeRate})`}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
 
+            <div className="flex justify-end items-center gap-4">
+              {settings?.updated_at && (
+                <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+                  Last updated: {new Date(settings.updated_at).toLocaleString()}
+                </p>
+              )}
               <button
                 onClick={handleSaveSettings}
                 disabled={savingSettings}
-                className="flex items-center gap-2 px-6 py-3.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(245,158,11,0.25)] hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer active:scale-[0.97]"
+                className="flex items-center gap-2 px-8 py-3.5 bg-amber-500 hover:bg-amber-400 text-black rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(245,158,11,0.25)] hover:shadow-[0_6px_20px_rgba(245,158,11,0.35)] disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer active:scale-[0.97]"
               >
                 {savingSettings
                   ? <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
                   : <Save size={14} />}
-                Set
-              </button>
-            </div>
-            {settings?.updated_at && (
-              <p className="text-[10px] font-bold text-zinc-600 mt-3 uppercase tracking-widest">
-                Last updated: {new Date(settings.updated_at).toLocaleString()}
-              </p>
-            )}
-          </div>
-
-          {/* WhatsApp Support */}
-          <div>
-            <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
-              <MessageCircle size={14} className="text-emerald-400" /> WhatsApp Support
-            </h4>
-            <div className="flex gap-3 items-center">
-              <input
-                type="text"
-                value={whatsappNumber}
-                onChange={e => setWhatsappNumber(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSaveWhatsApp()}
-                className="flex-1 px-4 py-3.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-emerald-500 transition-all font-black text-sm placeholder-muted focus:ring-2 focus:ring-emerald-500/15"
-                placeholder="+977-9843398340"
-              />
-
-              <button
-                onClick={handleSaveWhatsApp}
-                className="flex items-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] cursor-pointer active:scale-[0.97]"
-              >
-                <Save size={14} /> Set
+                Save All Rates
               </button>
             </div>
           </div>
-
         </div>
       </div>
 
@@ -393,7 +507,23 @@ export const AdminSystemConfig: React.FC = () => {
             Active Campaign Platforms
           </h4>
           <div className="flex flex-wrap gap-3">
-            {ALL_PLATFORMS.map(p => {
+            <button
+              onClick={() => {
+                if (allowedPlatforms.length === allPlatforms.length) {
+                  setAllowedPlatforms([]);
+                } else {
+                  setAllowedPlatforms([...allPlatforms]);
+                }
+              }}
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer active:scale-[0.96] ${
+                allowedPlatforms.length === allPlatforms.length
+                  ? 'nm-flat text-indigo-400 border border-indigo-500/20'
+                  : 'nm-inset text-zinc-500 border border-black/20 hover:text-zinc-400'
+              }`}
+            >
+              Select All
+            </button>
+            {Array.from(new Set(allPlatforms)).map(p => {
               const isActive = allowedPlatforms.includes(p);
               return (
                 <button
@@ -423,6 +553,176 @@ export const AdminSystemConfig: React.FC = () => {
               <Save size={14} /> Update Platforms
             </button>
           </div>
+        </div>
+      </div>
+
+      {/* ── Master Platforms Card ─────────────────────────────────────────────── */}
+      <div className="nm-flat rounded-2xl border border-white/5 overflow-hidden mb-8 mt-8">
+        {/* Card Header */}
+        <div className="px-6 py-4 border-b border-black/30 bg-[#161719]/40 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg nm-inset flex items-center justify-center border border-indigo-500/15">
+              <Layers size={15} className="text-indigo-400" />
+            </div>
+            <h3 className="text-xs font-black text-main uppercase tracking-[0.15em]">Master Platform List</h3>
+          </div>
+        </div>
+
+        {/* Add new platform row */}
+        <div className="px-6 pt-5 pb-4 border-b border-black/20">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={newPlatformName}
+              onChange={e => setNewPlatformName(e.target.value)}
+              placeholder="e.g. Threads, Snapchat..."
+              className="flex-1 px-4 py-2.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-indigo-500 transition-all font-bold text-sm placeholder-muted"
+            />
+            <button
+              onClick={async () => {
+                if (!newPlatformName.trim()) return;
+                const newName = newPlatformName.trim();
+                
+                if (allPlatforms.map(p => p.toLowerCase()).includes(newName.toLowerCase())) {
+                  showToast('error', `${newName} already exists in the master list.`);
+                  return;
+                }
+                
+                // Update Master List
+                const nextAll = [...allPlatforms, newName];
+                await updateMasterPlatforms(nextAll);
+                
+                // Automatically activate newly created platforms (deduplicate just in case)
+                const nextAllowed = Array.from(new Set([...allowedPlatforms, newName]));
+                setAllowedPlatforms(nextAllowed);
+                await supabase.from('app_settings').upsert({ id: 'global', allowed_platforms: nextAllowed, updated_at: new Date().toISOString() });
+                
+                setNewPlatformName('');
+              }}
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-400 rounded-xl font-black text-xs uppercase tracking-widest transition-all cursor-pointer active:scale-[0.96]"
+            >
+              <Plus size={14} /> Add
+            </button>
+          </div>
+        </div>
+
+        {/* Platforms List */}
+        <div className="p-4 grid gap-2">
+          {Array.from(new Set(allPlatforms)).map(platform => (
+            <div key={platform} className="flex items-center justify-between p-3 nm-flat rounded-xl">
+              {editingPlatform === platform ? (
+                <div className="flex items-center gap-3 w-full">
+                  <input
+                    type="text"
+                    value={editPlatformName}
+                    onChange={e => setEditPlatformName(e.target.value)}
+                    className="flex-1 px-3 py-1.5 nm-inset rounded-lg text-main outline-none text-sm font-bold"
+                    autoFocus
+                  />
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={async () => {
+                        if (!editPlatformName.trim()) return;
+                        const newName = editPlatformName.trim();
+                        
+                        // Update Master List
+                        await updateMasterPlatforms(allPlatforms.map(p => p === platform ? newName : p));
+                        
+                        // Rename in allowedPlatforms as well
+                        if (allowedPlatforms.includes(platform)) {
+                          const nextAllowed = allowedPlatforms.map(p => p === platform ? newName : p);
+                          setAllowedPlatforms(nextAllowed);
+                          await supabase.from('app_settings').upsert({ id: 'global', allowed_platforms: nextAllowed, updated_at: new Date().toISOString() });
+                        }
+                        
+                        // Rename in platformRates
+                        if (platformRates[platform] !== undefined) {
+                          setPlatformRates(prev => {
+                            const newRates = { ...prev };
+                            newRates[newName] = newRates[platform];
+                            delete newRates[platform];
+                            return newRates;
+                          });
+                          // We don't strictly need to auto-save rates here since admin can click Save All Rates, but it updates UI
+                        }
+                        
+                        setEditingPlatform(null);
+                      }}
+                      className="p-2 text-emerald-400 hover:bg-emerald-400/10 rounded-lg transition-colors"
+                    >
+                      <CheckCircle size={16} />
+                    </button>
+                    <button
+                      onClick={() => setEditingPlatform(null)}
+                      className="p-2 text-rose-400 hover:bg-rose-400/10 rounded-lg transition-colors"
+                    >
+                      <XCircle size={16} />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <span className="font-bold text-sm text-zinc-300">{platform}</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingPlatform(platform);
+                        setEditPlatformName(platform);
+                      }}
+                      className="p-1.5 text-zinc-500 hover:text-indigo-400 transition-colors"
+                    >
+                      <Settings size={14} />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        await updateMasterPlatforms(allPlatforms.filter(p => p !== platform));
+                        
+                        // Remove from allowedPlatforms
+                        let nextAllowed = allowedPlatforms;
+                        if (allowedPlatforms.includes(platform)) {
+                          nextAllowed = allowedPlatforms.filter(p => p !== platform);
+                          setAllowedPlatforms(nextAllowed);
+                        }
+                        
+                        // Remove from platformRates and save to DB
+                        const newRates = { ...platformRates };
+                        let ratesChanged = false;
+                        if (newRates[platform] !== undefined) {
+                          delete newRates[platform];
+                          setPlatformRates(newRates);
+                          ratesChanged = true;
+                        }
+
+                        // Batch update to DB
+                        const updates: any = { id: 'global', updated_at: new Date().toISOString() };
+                        if (allowedPlatforms.includes(platform)) updates.allowed_platforms = nextAllowed;
+                        
+                        // Always save rates if it was changed
+                        const parsedRates: Record<string, number> = {};
+                        if (ratesChanged) {
+                          for (const [p, val] of Object.entries(newRates)) {
+                            const pRate = parseFloat(val);
+                            if (!isNaN(pRate) && pRate > 0) parsedRates[p] = pRate;
+                          }
+                          updates.platform_rates = parsedRates;
+                        }
+                        
+                        if (Object.keys(updates).length > 2) {
+                           await supabase.from('app_settings').upsert(updates);
+                        }
+                      }}
+                      className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          ))}
+          {allPlatforms.length === 0 && (
+            <div className="text-center py-6 text-sm text-muted font-bold">No platforms added.</div>
+          )}
         </div>
       </div>
 
@@ -488,11 +788,23 @@ export const AdminSystemConfig: React.FC = () => {
                   transition={{ delay: idx * 0.04 }}
                   className="flex items-center justify-between px-6 py-4 hover:bg-white/[0.015] transition-colors group"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 flex-1">
                     <div className={`w-2 h-2 rounded-full ${type.is_active ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.6)]' : 'bg-zinc-700'}`} />
-                    <span className={`text-sm font-bold ${type.is_active ? 'text-main' : 'text-zinc-600 line-through'}`}>
-                      {type.name}
-                    </span>
+                    
+                    {editingType === type.id ? (
+                      <input 
+                        type="text" 
+                        value={editTypeName}
+                        onChange={(e) => setEditTypeName(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleEditType(type.id)}
+                        autoFocus
+                        className="px-2 py-1 text-sm font-bold text-main bg-transparent border-b border-indigo-500/50 outline-none w-full max-w-[200px]"
+                      />
+                    ) : (
+                      <span className={`text-sm font-bold ${type.is_active ? 'text-main' : 'text-zinc-600 line-through'}`}>
+                        {type.name}
+                      </span>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -509,6 +821,26 @@ export const AdminSystemConfig: React.FC = () => {
                         ? <><ToggleRight size={13} /> Enabled</>
                         : <><ToggleLeft size={13} /> Disabled</>}
                     </button>
+
+                    {/* Edit */}
+                    {editingType === type.id ? (
+                      <button
+                        onClick={() => handleEditType(type.id)}
+                        className="p-1.5 rounded-lg nm-flat hover:nm-concave text-emerald-500 border border-white/5 transition-all cursor-pointer active:scale-[0.95]"
+                      >
+                        <Save size={13} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setEditingType(type.id);
+                          setEditTypeName(type.name);
+                        }}
+                        className="p-1.5 rounded-lg nm-flat hover:nm-concave text-zinc-600 hover:text-indigo-400 border border-white/5 transition-all cursor-pointer active:scale-[0.95]"
+                      >
+                        <Settings size={13} />
+                      </button>
+                    )}
 
                     {/* Delete */}
                     <button

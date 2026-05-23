@@ -5,14 +5,17 @@ import { useRouter } from 'next/navigation';
 import { Shield, Users, Rocket, CreditCard, Tag, Activity, Settings } from 'lucide-react';
 import { useAuth } from '@/src/context/AuthContext';
 import { Navbar } from '@/src/components/layout/Navbar';
-import { AdminUserManagement } from '@/src/components/dashboard/AdminUserManagement';
-import { BoostRequestTable } from '@/src/components/dashboard/BoostRequestTable';
-import { BalanceRequestTable } from '@/src/components/dashboard/BalanceRequestTable';
-import { AdminPromoCodes } from '@/src/components/dashboard/AdminPromoCodes';
-import { AdminAuditLogs } from '@/src/components/dashboard/AdminAuditLogs';
-import { AdminSystemConfig } from '@/src/components/dashboard/AdminSystemConfig';
+import dynamic from 'next/dynamic';
+
+const AdminUserManagement = dynamic(() => import('@/src/components/dashboard/AdminUserManagement').then(m => m.AdminUserManagement), { ssr: false });
+const BoostRequestTable = dynamic(() => import('@/src/components/dashboard/BoostRequestTable').then(m => m.BoostRequestTable), { ssr: false });
+const BalanceRequestTable = dynamic(() => import('@/src/components/dashboard/BalanceRequestTable').then(m => m.BalanceRequestTable), { ssr: false });
+const AdminPromoCodes = dynamic(() => import('@/src/components/dashboard/AdminPromoCodes').then(m => m.AdminPromoCodes), { ssr: false });
+const AdminAuditLogs = dynamic(() => import('@/src/components/dashboard/AdminAuditLogs').then(m => m.AdminAuditLogs), { ssr: false });
+const AdminSystemConfig = dynamic(() => import('@/src/components/dashboard/AdminSystemConfig').then(m => m.AdminSystemConfig), { ssr: false });
 import { useDashboardData } from '@/src/hooks/useDashboardData';
 import { generateBoostInvoice, generateTopupInvoice } from '@/src/utils/pdfGenerator';
+import AdminLoading from './loading';
 
 export default function AdminPage() {
   const { user, profile, loading: authLoading } = useAuth();
@@ -34,10 +37,13 @@ export default function AdminPage() {
     }
   }, [authLoading, profile, router]);
 
-  if (authLoading || (profile && profile.role !== 'Admin')) {
+  const isDataLoading = authLoading || (profile && profile.role !== 'Admin') || dataLoading;
+
+  if (isDataLoading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center" suppressHydrationWarning>
-        <div className="w-12 h-12 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin" suppressHydrationWarning></div>
+      <div className="min-h-screen bg-surface text-muted font-sans selection:bg-indigo-500/30">
+        <Navbar onSettings={() => {}} />
+        <AdminLoading />
       </div>
     );
   }
@@ -152,7 +158,8 @@ export default function AdminPage() {
             <BalanceRequestTable 
               requests={balanceRequests}
               profile={profile}
-              onUpdateStatus={handleUpdateBalanceStatus}
+              onApprove={(id) => handleUpdateBalanceStatus(id, 'Approved')}
+              onReject={(id) => handleUpdateBalanceStatus(id, 'Rejected')}
               onDelete={handleDeleteBalanceRequest}
               onGenerateInvoice={generateTopupInvoice}
             />

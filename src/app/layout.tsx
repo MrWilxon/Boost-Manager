@@ -5,9 +5,25 @@ import '../index.css';
 import { ErrorOverlayKiller } from '@/src/components/ErrorOverlayKiller';
 import { WhatsAppSupportButton } from '@/src/components/common/WhatsAppSupportButton';
 
-export const metadata = {
-  title: 'Boost Manager - Online Boosting Services',
-  description: 'Manage and request social media boosting requests easily.',
+import type { Metadata, Viewport } from 'next';
+
+export const viewport: Viewport = {
+  themeColor: '#4f46e5',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
+
+export const metadata: Metadata = {
+  title: 'Boost Manager - Command Center',
+  description: 'Professional dashboard to manage and request social media boosting services.',
+  keywords: ['Social Media', 'Boosting', 'Management', 'Dashboard', 'Marketing'],
+  openGraph: {
+    title: 'Boost Manager - Command Center',
+    description: 'Professional dashboard to manage and request social media boosting services.',
+    type: 'website',
+    siteName: 'Boost Manager',
+  },
 };
 
 export default function RootLayout({
@@ -19,6 +35,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
               const originalConsoleError = console.error;

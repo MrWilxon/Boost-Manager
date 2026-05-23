@@ -1,3 +1,4 @@
+'use client';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -13,10 +14,12 @@ interface BoostRequestModalProps {
   profile: UserProfile | null;
   user: any;
   rate: number;
+  platformRates?: Record<string, number>;
   editingRequestId: string | null;
   onSuccess: (msg: string) => void;
   requests: any[];
   allowedPlatforms?: string[];
+  whatsappNumber?: string;
 }
 
 export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
@@ -25,18 +28,20 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   profile,
   user,
   rate,
+  platformRates,
   editingRequestId,
   onSuccess,
   requests,
-  allowedPlatforms = ["Facebook", "Instagram"]
+  allowedPlatforms = ["Facebook", "Instagram"],
+  whatsappNumber
 }) => {
   const [modalUrl, setModalUrl] = useState("");
-  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["Facebook", "Instagram"]);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(allowedPlatforms.length > 0 ? [allowedPlatforms[0]] : []);
   const [modalLocations, setModalLocations] = useState<string[]>(["All Nepal"]);
   const [modalGender, setModalGender] = useState("Both");
   const [modalAge, setModalAge] = useState("18-65");
   const [modalAdGoal, setModalAdGoal] = useState("Get Message");
-  const [modalDestination, setModalDestination] = useState("Messenger");
+  const [modalDestinations, setModalDestinations] = useState<string[]>(["Messenger"]);
   const [modalBudget, setModalBudget] = useState(5);
   const [modalDuration, setModalDuration] = useState(5);
   const [modalNotes, setModalNotes] = useState("");
@@ -65,6 +70,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     isCustomAge,
     customAge,
     rate,
+    platformRates,
     appliedPromo,
     profile
   });
@@ -99,7 +105,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
       const req = requests.find(r => r.id === editingRequestId);
       if (req) {
         setModalUrl(req.url || "");
-        setSelectedPlatforms(req.platforms || ["Facebook", "Instagram"]);
+        setSelectedPlatforms(req.platforms || (allowedPlatforms.length > 0 ? [allowedPlatforms[0]] : []));
         
         // Handle Location (Custom vs Default)
         const loc = req.location || "All Nepal";
@@ -131,14 +137,14 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
         }
 
         setModalAdGoal(req.adGoal || "Get Message");
-        setModalDestination(req.destination || "Messenger");
+        setModalDestinations(req.destination ? req.destination.split(', ') : ["Messenger"]);
         setModalBudget(req.allocatedBudget || 5);
         setModalDuration(req.duration || 5);
         setModalNotes(req.remarks || "");
       }
     } else if (!editingRequestId && isOpen) {
        setModalUrl("");
-       setSelectedPlatforms(["Facebook", "Instagram"]);
+       setSelectedPlatforms(allowedPlatforms.length > 0 ? [allowedPlatforms[0]] : []);
        setModalLocations(["All Nepal"]);
        setIsCustomLocation(false);
        setCustomLocation("");
@@ -147,7 +153,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
        setIsCustomAge(false);
        setCustomAge("");
        setModalAdGoal(campaignTypes[0] || "Get Message");
-       setModalDestination("Messenger");
+       setModalDestinations(["Messenger"]);
        setModalBudget(5);
        setModalDuration(5);
        setModalNotes("");
@@ -158,14 +164,15 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     }
   }, [editingRequestId, isOpen, requests]);
 
-  useEffect(() => {
-    if (modalAdGoal === "Website Traffic") {
-      setModalDestination("Website");
-    }
-  }, [modalAdGoal]);
+  // Removed auto-set destination for Website Traffic as it is irrelevant
 
   const handleSubmit = async () => {
     if (!eligibility.isEligible) return;
+
+    if (selectedPlatforms.length === 0) {
+      setError("Please select at least one platform.");
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -180,7 +187,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
       gender: modalGender,
       age: isCustomAge ? customAge : modalAge,
       ad_goal: modalAdGoal,
-      destination: modalDestination,
+      destination: modalAdGoal === "Get Message" ? modalDestinations.join(", ") : "",
       budget: modalBudget,
       allocated_budget: modalBudget,
       duration: modalDuration,
@@ -254,26 +261,15 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     }
   };
 
-  const hasPlatform = (p: string) => selectedPlatforms.includes(p);
   const togglePlatform = (p: string) => {
-    if (p === 'All') {
-      setSelectedPlatforms(['Facebook', 'Instagram']);
-      return;
-    }
-    if (isAllPlatforms) {
-      setSelectedPlatforms([p]);
-      return;
-    }
     if (selectedPlatforms.includes(p)) {
-      if (selectedPlatforms.length > 1) {
-        setSelectedPlatforms(prev => prev.filter(x => x !== p));
-      }
+      setSelectedPlatforms(prev => prev.filter(x => x !== p));
     } else {
       setSelectedPlatforms(prev => [...prev, p]);
     }
   };
 
-  const isAllPlatforms = allowedPlatforms.length > 0 && allowedPlatforms.every(p => selectedPlatforms.includes(p));
+  const isAllPlatforms = allowedPlatforms.length > 0 && allowedPlatforms.length === selectedPlatforms.length && allowedPlatforms.every(p => selectedPlatforms.includes(p));
 
   const dailyBudget = modalBudget && modalDuration ? (modalBudget / modalDuration).toFixed(2) : "0.00";
 
@@ -286,10 +282,9 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
 *Gender:* ${modalGender}
 *Age:* ${isCustomAge ? customAge : modalAge}
 *Ad Goal:* ${modalAdGoal}
-*Destination:* ${modalDestination}
-
-*Budget:* $${modalBudget}
+${modalAdGoal === 'Get Message' ? `*Destination:* ${modalDestinations.join(', ')}\n` : ''}*Budget Allocation:* $${modalBudget}
 *Duration:* ${modalDuration} days
+*Estimated Reach:* ${eligibility.estimatedReach}
 *Total Payable:* रू${eligibility.totalNpr.toLocaleString()}
 
 *Notes:* ${modalNotes || 'None'}`;
@@ -297,10 +292,12 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
 
   const handleWhatsAppSupport = () => {
     const text = encodeURIComponent(generateTextFormat());
-    // Use the admin whatsapp number from props or fallback
-    const adminPhone = "9779843398340";
-    window.open(`https://wa.me/${adminPhone}?text=${text}`, '_blank');
+    // Use the admin whatsapp number from props, stripping non-numeric chars except leading + if needed
+    const cleanPhone = whatsappNumber ? whatsappNumber.replace(/[^0-9]/g, '') : "9779843398340";
+    window.open(`https://wa.me/${cleanPhone}?text=${text}`, '_blank');
   };
+
+  const DEFAULT_AGES = ["13-17", "18-65", "18-24", "25-34", "35-44", "45-54", "55-64"];
 
   return (
     <AnimatePresence>
@@ -363,8 +360,11 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                       <div className="flex flex-wrap gap-2">
                         <button 
                           onClick={() => {
-                            if (isAllPlatforms) setSelectedPlatforms([]);
-                            else setSelectedPlatforms([...allowedPlatforms]);
+                            if (isAllPlatforms) {
+                              setSelectedPlatforms([]);
+                            } else {
+                              setSelectedPlatforms([...allowedPlatforms]);
+                            }
                           }}
                           className={`px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
                             isAllPlatforms 
@@ -374,19 +374,22 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                         >
                           All
                         </button>
-                        {allowedPlatforms.map(p => (
-                          <button 
-                            key={p}
-                            onClick={() => togglePlatform(p)}
-                            className={`px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
-                              !isAllPlatforms && hasPlatform(p) 
-                                ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
-                                : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
-                            }`}
-                          >
-                            {p}
-                          </button>
-                        ))}
+                        {Array.from(new Set(allowedPlatforms)).map(p => {
+                          const isSelected = selectedPlatforms.includes(p);
+                          return (
+                            <button 
+                              key={p}
+                              onClick={() => togglePlatform(p)}
+                              className={`px-3 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all duration-200 cursor-pointer active:scale-[0.95] ${
+                                isSelected 
+                                  ? 'nm-inset text-indigo-400 border border-indigo-500/20' 
+                                  : 'nm-flat hover:nm-concave text-muted hover:text-main border border-white/5'
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   </div>
@@ -463,13 +466,9 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                                 onChange={(e) => setModalAge(e.target.value)}
                                 className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
                               >
-                                <option className="bg-surface">13-17</option>
-                                <option className="bg-surface">18-65</option>
-                                <option className="bg-surface">18-24</option>
-                                <option className="bg-surface">25-34</option>
-                                <option className="bg-surface">35-44</option>
-                                <option className="bg-surface">45-54</option>
-                                <option className="bg-surface">55-64</option>
+                                {DEFAULT_AGES.map(ageOpt => (
+                                  <option key={ageOpt} className="bg-surface">{ageOpt}</option>
+                                ))}
                               </select>
                               <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
                             </div>
@@ -511,22 +510,34 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">DEST.</label>
-                      <div className="relative">
-                        <select 
-                          value={modalDestination}
-                          onChange={(e) => setModalDestination(e.target.value)}
-                          className="input-base border-l-2 border-l-indigo-500/40 border-black/25 appearance-none cursor-pointer pr-10"
-                        >
-                          <option className="bg-surface">Messenger</option>
-                          <option className="bg-surface">WhatsApp</option>
-                          <option className="bg-surface">Instagram Direct</option>
-                          <option className="bg-surface">Website</option>
-                        </select>
-                        <ChevronDown size={14} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted pointer-events-none" />
+                    {modalAdGoal === "Get Message" && (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-muted uppercase tracking-[0.15em] ml-1">DEST.</label>
+                        <div className="flex flex-wrap gap-2">
+                          {["Messenger", "WhatsApp", "Instagram Direct"].map(dest => {
+                            const isSelected = modalDestinations.includes(dest);
+                            return (
+                              <button
+                                key={dest}
+                                onClick={() => {
+                                  const next = isSelected
+                                    ? modalDestinations.filter(d => d !== dest)
+                                    : [...modalDestinations, dest];
+                                  setModalDestinations(next.length ? next : ["Messenger"]); // Prevent empty selection
+                                }}
+                                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                                  isSelected
+                                    ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/50"
+                                    : "bg-black/20 text-muted border border-black/20 hover:text-main"
+                                }`}
+                              >
+                                {dest}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     <button 
                       onClick={() => setShowTextFormat(!showTextFormat)}
@@ -619,20 +630,30 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
                           I HAVE A PROMO CODE
                         </button>
                       ) : (
-                        <div className="flex gap-2">
-                          <input 
-                            type="text"
-                            placeholder="ENTER CODE"
-                            value={promoCode}
-                            onChange={(e) => setPromoCode(e.target.value)}
-                            className="flex-1 input-base border-l-2 border-l-indigo-500/40 border-black/25 text-xs font-black uppercase"
-                          />
-                          <button 
-                            onClick={handleApplyPromo} 
-                            className="btn-primary py-2.5 cursor-pointer"
-                          >
-                            Apply
-                          </button>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex gap-2">
+                            <input 
+                              type="text"
+                              placeholder="ENTER CODE"
+                              value={promoCode}
+                              onChange={(e) => setPromoCode(e.target.value)}
+                              className="flex-1 input-base border-l-2 border-l-indigo-500/40 border-black/25 text-xs font-black uppercase"
+                            />
+                            <button 
+                              onClick={handleApplyPromo} 
+                              className="btn-primary py-2.5 cursor-pointer"
+                            >
+                              Apply
+                            </button>
+                          </div>
+                          {appliedPromo && (
+                            <motion.div 
+                              initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }}
+                              className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 py-1.5 px-3 rounded-lg border border-emerald-500/20 w-fit"
+                            >
+                              🎉 Promo Applied: {appliedPromo.code}
+                            </motion.div>
+                          )}
                         </div>
                       )}
                     </div>

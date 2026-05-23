@@ -12,6 +12,8 @@ export interface UserProfile {
   profilePic?: string;
   whatsapp?: string;
   profile_pic?: string;
+  avatarUrl?: string;
+  businessName?: string;
 }
 
 interface AuthContextType {

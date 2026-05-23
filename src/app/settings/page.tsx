@@ -24,7 +24,7 @@ export default function SettingsPage() {
     }
     if (profile) {
       setWhatsapp(profile.whatsapp || '');
-      setBusinessName(profile.business_name || '');
+      setBusinessName(profile.businessName || '');
     }
   }, [user, profile, authLoading, router]);
 
@@ -164,8 +164,8 @@ export default function SettingsPage() {
             <div className="nm-flat rounded-3xl p-6 border border-white/5 flex flex-col items-center text-center">
               <div className="relative group mb-4">
                 <div className="w-32 h-32 rounded-full nm-inset flex items-center justify-center text-indigo-500 border border-white/5 overflow-hidden shadow-[inset_4px_4px_8px_rgba(0,0,0,0.6)]">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                  {profile?.avatarUrl ? (
+                    <img src={profile.avatarUrl} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <User size={48} className="opacity-50" />
                   )}
