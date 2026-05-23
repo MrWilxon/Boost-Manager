@@ -37,7 +37,7 @@ export const OneSignalProvider = ({ children }: { children: React.ReactNode }) =
             await OneSignal.logout();
           }
         } catch (loginError) {
-          console.warn('OneSignal login/logout skipped due to initialization failure.');
+          console.warn('OneSignal login/logout skipped:', loginError);
         }
       } catch (e) {
         console.warn('OneSignal Initialization failed', e);
