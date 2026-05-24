@@ -37,11 +37,11 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
         
         <div className="flex items-center gap-3">
           {profile && (
-            <div className="tour-step-wallet flex items-center gap-2 nm-inset rounded-xl px-3.5 py-1.5 border border-emerald-500/10 transition-all duration-200">
+            <div className="tour-step-wallet flex items-center gap-1.5 sm:gap-2 nm-inset rounded-xl px-2.5 py-1 sm:px-3.5 sm:py-1.5 border border-emerald-500/10 transition-all duration-200">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
               <div className="flex flex-col items-start">
-                <span className="text-[8px] font-black text-emerald-500/60 uppercase tracking-widest leading-none">Wallet</span>
-                <span className="text-xs sm:text-sm font-black text-emerald-400 leading-none mt-0.5">
+                <span className="text-[8px] font-black text-emerald-500/60 uppercase tracking-widest leading-none hidden sm:block">Wallet</span>
+                <span className="text-[10px] sm:text-sm font-black text-emerald-400 leading-none mt-0 sm:mt-0.5">
                   रू{(profile.balance || 0).toLocaleString()}
                 </span>
               </div>
@@ -50,7 +50,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
 
           <div className="h-8 w-px bg-black/40 shadow-[1px_0_0_rgba(255,255,255,0.03)] mx-1 hidden md:block"></div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {profile && profile.role === 'Admin' && (
               <Link href={isAdminPage ? "/dashboard" : "/admin"} className="hidden md:flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.15)] text-amber-500 hover:text-amber-400 hover:bg-amber-500/20 active:scale-[0.98] rounded-xl px-3.5 py-2 font-black text-[10px] uppercase tracking-widest transition-all duration-300">
                 <Shield size={14} />
@@ -59,15 +59,15 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
             )}
             
             {profile && (
-              <div className="hidden md:flex items-center gap-2.5 nm-flat rounded-xl px-3 py-1.5 border border-white/5">
-                <div className="flex flex-col items-end">
+              <Link href="/settings" className="tour-step-settings hidden md:flex items-center gap-2.5 sm:nm-flat rounded-xl p-1 sm:px-3 sm:py-1.5 sm:border sm:border-white/5 hover:bg-white/5 sm:hover:nm-inset transition-all active:scale-[0.98]">
+                <div className="flex flex-col items-end hidden sm:flex">
                   <span className="text-xs font-bold text-main leading-none mb-0.5">{profile.username}</span>
                   <span className={`text-[8px] font-black uppercase tracking-widest leading-none ${profile.role === 'Admin' ? 'text-amber-400' : 'text-indigo-400'}`}>{profile.role}</span>
                 </div>
-                <div className={`w-7 h-7 rounded-lg flex items-center justify-center font-black text-xs ${profile.role === 'Admin' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-inner' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner'}`}>
+                <div className={`w-8 h-8 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center font-black text-xs ${profile.role === 'Admin' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-inner' : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner'}`}>
                   {profile.username?.charAt(0).toUpperCase() || 'U'}
                 </div>
-              </div>
+              </Link>
             )}
 
             {profile && (
@@ -90,13 +90,7 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
               {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
             </button>
 
-            <Link 
-              href="/settings"
-              className="tour-step-settings btn-icon hidden md:flex"
-              title="Profile Settings"
-            >
-              <UserIcon size={16} />
-            </Link>
+
 
             <button 
               onClick={() => { router.push('/logout'); }}
@@ -109,10 +103,10 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
             {/* Mobile Menu Toggle */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="btn-icon flex md:hidden z-50"
+              className="flex items-center justify-center w-8 h-8 rounded-xl bg-surface border border-white/5 md:hidden z-50 text-muted transition-all active:scale-95 shadow-[inset_-2px_-2px_6px_rgba(255,255,255,0.02),_inset_2px_2px_6px_rgba(0,0,0,0.5)]"
               title="Menu"
             >
-              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
@@ -152,6 +146,14 @@ const Navbar: React.FC<NavbarProps> = ({ onLoadMoney, onSettings }) => {
             <UserIcon size={18} />
             Profile Settings
           </Link>
+
+          <button
+            onClick={() => { window.dispatchEvent(new Event('open_announcements')); setIsMobileMenuOpen(false); }}
+            className="flex items-center gap-3 nm-flat rounded-xl p-3 text-amber-500 font-bold active:nm-inset transition-all w-full text-left"
+          >
+            <Megaphone size={18} />
+            System Alerts & Notices
+          </button>
 
           <button
             onClick={() => { setTheme(theme === 'dark' ? 'light' : 'dark'); setIsMobileMenuOpen(false); }}

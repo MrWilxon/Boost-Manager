@@ -14,6 +14,8 @@
   --breakpoint-xs: 480px;
 }
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @layer base {
   :root {
     /* Light Mode Variables */
@@ -107,6 +109,7 @@
   border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
+@layer components {
 /* ─── Glassmorphism Card (Soft UI Overlay) ─── */
 .glass {
   background: var(--btn-glass);

@@ -97,7 +97,7 @@ export const NotificationBell = () => {
     <div className="relative flex items-center justify-center" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] cursor-pointer bg-surface border border-white/5 shadow-[-4px_-4px_12px_var(--nm-shadow-light),_4px_4px_12px_var(--nm-shadow-dark)] hover:shadow-[-5px_-5px_15px_var(--nm-shadow-light),_5px_5px_15px_var(--nm-shadow-dark)]"
+        className="flex items-center justify-center gap-2 w-8 h-8 md:w-auto md:h-auto md:px-4 md:py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] cursor-pointer bg-surface border border-white/5 shadow-[-3px_-3px_8px_var(--nm-shadow-light),_3px_3px_8px_var(--nm-shadow-dark)] md:shadow-[-4px_-4px_12px_var(--nm-shadow-light),_4px_4px_12px_var(--nm-shadow-dark)] hover:shadow-[-4px_-4px_12px_var(--nm-shadow-light),_4px_4px_12px_var(--nm-shadow-dark)]"
         title="Alerts"
       >
         <div className="relative flex items-center justify-center">

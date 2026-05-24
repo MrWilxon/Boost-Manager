@@ -98,7 +98,7 @@ export const AnnouncementModal = () => {
             <h3 className="font-black text-main uppercase tracking-widest text-sm flex-1">Notice</h3>
             <button
               onClick={handleDismiss}
-              className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 dark:text-zinc-400 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
             >
               <X size={18} />
             </button>
@@ -106,8 +106,8 @@ export const AnnouncementModal = () => {
 
           {/* Body */}
           <div className="p-6">
-            <h2 className="text-xl font-bold text-white mb-2">{current.title}</h2>
-            <div className="text-sm text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{current.title}</h2>
+            <div className="text-sm text-slate-600 dark:text-zinc-300 leading-relaxed whitespace-pre-wrap break-words">
               {current.content}
             </div>
           </div>
