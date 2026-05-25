@@ -283,7 +283,11 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const dailyBudget = modalBudget && modalDuration ? (modalBudget / modalDuration).toFixed(2) : "0.00";
 
   const generateTextFormat = () => {
-    let text = `Platforms: ${selectedPlatforms.join(', ')}\n`;
+    let text = '';
+    if (modalUrl) {
+      text += `${modalUrl}\n`;
+    }
+    text += `Platforms: ${selectedPlatforms.join(', ')}\n`;
     text += `Total Budget: $${modalBudget}\n`;
     text += `Duration: ${modalDuration} days\n`;
     text += `Location: ${isCustomLocation ? customLocation : modalLocations.join(', ')}\n`;
