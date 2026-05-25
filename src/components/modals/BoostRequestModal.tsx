@@ -283,27 +283,18 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const dailyBudget = modalBudget && modalDuration ? (modalBudget / modalDuration).toFixed(2) : "0.00";
 
   const generateTextFormat = () => {
-    let text = '';
-    if (modalUrl) {
-      text += `${modalUrl}\n`;
-    }
-    text += `Platforms: ${selectedPlatforms.join(', ')}\n`;
+    let text = `Platforms: ${selectedPlatforms.join(', ')}\n`;
+    text += `Total Budget: $${modalBudget}\n`;
+    text += `Duration: ${modalDuration} days\n`;
     text += `Location: ${isCustomLocation ? customLocation : modalLocations.join(', ')}\n`;
     text += `Gender: ${modalGender}\n`;
     text += `Age: ${isCustomAge ? customAge : modalAge}\n`;
     text += `Ad Goal: ${modalAdGoal}\n`;
     
     if (modalAdGoal === 'Get Message' && modalDestinations.length > 0) {
-      text += `Destination: ${modalDestinations.join(', ')}\n`;
-    }
-    
-    text += `Total Budget: $${modalBudget}\n`;
-    text += `Duration: ${modalDuration} days\n`;
-    text += `Estimated Reach: ${eligibility.estimatedReach}\n`;
-    text += `Total Payable: रू${eligibility.totalNpr.toLocaleString()}`;
-    
-    if (modalNotes && modalNotes.trim() !== '') {
-      text += `\n\nNotes: ${modalNotes}`;
+      text += `Destination: ${modalDestinations.join(', ')}`;
+    } else {
+      text += `Destination: None`;
     }
     
     return text;

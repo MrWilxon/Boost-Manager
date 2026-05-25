@@ -80,6 +80,8 @@ export default function AdminPage() {
     setBalanceRequests(prev => prev.filter(r => r.id !== id));
   };
 
+  const pendingTopUpsCount = balanceRequests.filter(r => r.status === 'Pending').length;
+
   return (
     <div className="min-h-screen bg-surface text-muted font-sans selection:bg-indigo-500/30" suppressHydrationWarning>
       <Navbar />
@@ -101,6 +103,20 @@ export default function AdminPage() {
           </div>
         </div>
 
+        {/* Admin Alerts */}
+        {pendingTopUpsCount > 0 && (
+          <div className="mb-8 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-start gap-3 shadow-[0_0_15px_rgba(244,63,94,0.1)]">
+            <Activity className="text-rose-500 animate-pulse shrink-0 mt-0.5" size={20} />
+            <div>
+              <h3 className="text-sm font-black text-rose-500 uppercase tracking-widest">New Top-up Request(s)</h3>
+              <p className="text-xs font-bold text-rose-500/80 mt-1">You have {pendingTopUpsCount} pending top-up request(s) waiting for approval.</p>
+            </div>
+            <button onClick={() => setActiveTab('topups')} className="ml-auto px-4 py-2 bg-rose-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-400 transition-colors shadow-[0_0_15px_rgba(244,63,94,0.3)]">
+              View
+            </button>
+          </div>
+        )}
+
         {/* Neumorphic Tabs */}
         <div className="flex flex-wrap items-center gap-4 mb-8 nm-inset p-2 rounded-2xl border border-white/5 inline-flex">
           <button
@@ -121,11 +137,16 @@ export default function AdminPage() {
           </button>
           <button
             onClick={() => setActiveTab('topups')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 ${
+            className={`relative flex items-center gap-2 px-5 py-2.5 rounded-xl font-black text-xs uppercase tracking-widest transition-all duration-300 ${
               activeTab === 'topups' ? 'nm-flat text-emerald-400 border border-white/5 shadow-[-3px_-3px_8px_rgba(255,255,255,0.03),_3px_3px_8px_rgba(0,0,0,0.4)]' : 'text-muted hover:text-muted hover:nm-flat hover:border-transparent'
             }`}
           >
             <CreditCard size={16} /> Top-ups
+            {pendingTopUpsCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-rose-500 rounded-full border-2 border-surface flex items-center justify-center text-[8px] font-black text-white animate-pulse">
+                {pendingTopUpsCount}
+              </span>
+            )}
           </button>
           <button
             onClick={() => setActiveTab('promos')}
