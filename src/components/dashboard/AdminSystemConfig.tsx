@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Settings, DollarSign, Layers, Plus, Trash2, CheckCircle,
   XCircle, Save, RefreshCw, AlertCircle, ToggleLeft, ToggleRight,
-  MessageCircle, Zap, Edit2
+  MessageCircle, Zap, Edit2, Facebook
 } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { ALL_PLATFORMS } from '../../constants';
@@ -43,6 +43,7 @@ export const AdminSystemConfig: React.FC = () => {
 
   // ── LocalStorage state ──────────────────────────────────────────────────────
   const [whatsappNumber, setWhatsappNumber] = useState<string>('');
+  const [facebookRoleLink, setFacebookRoleLink] = useState<string>('');
   const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>([]);
   const [allPlatforms, setAllPlatforms] = useState<string[]>(ALL_PLATFORMS);
   const [isDataSaver, setIsDataSaver] = useState<boolean>(false);
@@ -114,6 +115,18 @@ export const AdminSystemConfig: React.FC = () => {
             setPlatformRates(ratesStr);
           }
         }
+      }
+
+      // Fetch Facebook Role Link
+      const { data: fbData } = await supabase
+        .from('app_settings')
+        .select('*')
+        .eq('id', 'facebook_role_setup')
+        .maybeSingle();
+      if (fbData && fbData.whatsapp_number) {
+        setFacebookRoleLink(fbData.whatsapp_number);
+      } else {
+        setFacebookRoleLink('https://www.facebook.com/wilsonstha/');
       }
 
       // Campaign types
@@ -191,6 +204,23 @@ export const AdminSystemConfig: React.FC = () => {
       showToast('success', 'WhatsApp support number updated globally!');
     } catch (err: any) {
       showToast('error', err.message || 'Failed to save WhatsApp number.');
+    }
+  };
+
+  // ── Save Facebook Role Link ───────────────────────────────────────────────────
+  const handleSaveFacebookLink = async () => {
+    if (!facebookRoleLink.trim()) {
+      showToast('error', 'Please enter a valid link.');
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .upsert({ id: 'facebook_role_setup', whatsapp_number: facebookRoleLink, updated_at: new Date().toISOString() });
+      if (error) throw error;
+      showToast('success', 'Facebook Page Role Link updated globally!');
+    } catch (err: any) {
+      showToast('error', err.message || 'Failed to save Facebook link.');
     }
   };
 
@@ -438,6 +468,30 @@ export const AdminSystemConfig: React.FC = () => {
                 <button
                   onClick={handleSaveWhatsApp}
                   className="flex items-center gap-2 px-6 py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(16,185,129,0.25)] hover:shadow-[0_6px_20px_rgba(16,185,129,0.35)] cursor-pointer active:scale-[0.97]"
+                >
+                  <Save size={14} /> Set
+                </button>
+              </div>
+            </div>
+
+            {/* Facebook Role Link */}
+            <div className="md:col-span-2">
+              <h4 className="text-[10px] font-black text-muted uppercase tracking-[0.15em] mb-4 flex items-center gap-2">
+                <Facebook size={14} className="text-[#1877F2]" /> Facebook Page Role Setup Link
+              </h4>
+              <p className="text-[10px] text-muted mb-3 font-medium">This link is displayed in the user dashboard to grant admin access to their Facebook page.</p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
+                <input
+                  type="text"
+                  value={facebookRoleLink}
+                  onChange={e => setFacebookRoleLink(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveFacebookLink()}
+                  className="flex-1 px-4 py-3.5 nm-inset rounded-xl text-main outline-none border border-black/20 focus:border-l-4 focus:border-l-[#1877F2] transition-all font-black text-sm placeholder-muted focus:ring-2 focus:ring-[#1877F2]/15"
+                  placeholder="https://www.facebook.com/admin_profile/"
+                />
+                <button
+                  onClick={handleSaveFacebookLink}
+                  className="flex items-center gap-2 px-6 py-3.5 bg-[#1877F2] hover:bg-blue-600 text-white rounded-xl font-black text-xs uppercase tracking-widest transition-all shadow-[0_4px_16px_rgba(24,119,242,0.25)] hover:shadow-[0_6px_20px_rgba(24,119,242,0.35)] cursor-pointer active:scale-[0.97]"
                 >
                   <Save size={14} /> Set
                 </button>

@@ -40,22 +40,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, 8000);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-      const controller = new AbortController();
-      const fetchTimeout = setTimeout(() => controller.abort(), 7000);
-
-      const response = await fetch(`${apiUrl}/api/profile/${userId}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
-        signal: controller.signal,
-      });
-      clearTimeout(fetchTimeout);
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch profile from backend');
+      if (error) {
+        throw error;
       }
-      
-      const data = await response.json();
       
       const mappedProfile: UserProfile = {
         uid: data.id,

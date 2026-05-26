@@ -18,6 +18,8 @@ import {
   RotateCw,
   AlertTriangle,
   Shield,
+  Facebook,
+  Copy,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/src/services/supabase";
@@ -173,6 +175,17 @@ export default function DashboardPage() {
             setPlatformRates(data.platform_rates);
           }
         }
+
+        // Fetch Facebook Role Link separately
+        const { data: fbData } = await supabase
+          .from('app_settings')
+          .select('whatsapp_number')
+          .eq('id', 'facebook_role_setup')
+          .maybeSingle();
+        if (fbData && fbData.whatsapp_number) {
+          setFacebookRoleLink(fbData.whatsapp_number);
+        }
+
       } catch (error) {
         console.error('Failed to fetch app settings', error);
       }
@@ -208,7 +221,7 @@ export default function DashboardPage() {
     showNotification("WhatsApp support number updated.");
   };
 
-  const [pageRoleInfo, setPageRoleInfo] = useState<string>("fb.com/admin_profile");
+  const [facebookRoleLink, setFacebookRoleLink] = useState<string>("https://www.facebook.com/wilsonstha/");
   const [allowedPlatforms, setAllowedPlatforms] = useState<string[]>(["Facebook", "Instagram", "TikTok", "YouTube", "Twitter", "LinkedIn"]);
   const [adminAlertMessage, setAdminAlertMessage] = useState<string>("");
 
@@ -431,6 +444,38 @@ export default function DashboardPage() {
         </div>
 
         <OnboardingTour />
+
+        {/* Facebook Page Role Setup */}
+        <div className="nm-inset bg-surface/50 rounded-3xl p-6 md:p-8 border border-blue-500/10 mb-8 mt-2 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px] pointer-events-none"></div>
+          <div className="flex flex-col md:flex-row gap-5 relative z-10">
+            <div className="w-14 h-14 shrink-0 bg-[#1877F2]/10 rounded-2xl flex items-center justify-center border border-[#1877F2]/20 text-[#1877F2] shadow-[inset_0_0_15px_rgba(24,119,242,0.1)]">
+              <Facebook size={28} />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-black text-main tracking-tight">Facebook Page Role Setup</h2>
+              <p className="text-sm font-medium text-muted mt-2 leading-relaxed max-w-4xl">
+                Please provide <strong className="text-[#1877F2] font-black tracking-wide">FULL ACCESS</strong> to the following profile for your Facebook Page. This is necessary to allow the admin full control to quickly modify and optimize your campaign settings. It is more logical and good for admin purposes, making the work very fast and easy.
+              </p>
+              
+              <div className="mt-5 flex items-center gap-3">
+                <div className="nm-inset px-5 py-3 rounded-xl text-xs sm:text-sm font-mono font-bold text-main border border-white/5 bg-surface-sunken w-full max-w-sm overflow-hidden text-ellipsis whitespace-nowrap shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]">
+                  {facebookRoleLink}
+                </div>
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(facebookRoleLink);
+                    alert("Profile link copied to clipboard!");
+                  }}
+                  className="w-11 h-11 shrink-0 rounded-xl bg-surface border border-white/5 shadow-[-4px_-4px_12px_var(--nm-shadow-light),_4px_4px_12px_var(--nm-shadow-dark)] flex items-center justify-center text-muted hover:text-main hover:shadow-[-5px_-5px_15px_var(--nm-shadow-light),_5px_5px_15px_var(--nm-shadow-dark)] active:shadow-[inset_-3px_-3px_8px_var(--nm-shadow-light),_inset_3px_3px_8px_var(--nm-shadow-dark)] transition-all duration-200 cursor-pointer"
+                  title="Copy Profile Link"
+                >
+                  <Copy size={18} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
