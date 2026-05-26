@@ -33,9 +33,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string, token: string) => {
-    // Timeout guard — never hang for more than 8s
     const timeoutId = setTimeout(() => {
-      console.warn('[Auth] Profile fetch timed out — releasing loading state');
+      console.warn('[Auth] Profile fetch timed out ?" releasing loading state');
       setLoading(false);
     }, 8000);
 
@@ -62,6 +61,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
 
       setProfile(mappedProfile);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('boost_manager_profile', JSON.stringify(mappedProfile));
+      }
     } catch (error) {
       console.error('Error fetching profile:', error);
     } finally {
@@ -71,19 +73,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    // 0. Aggressive UI Unblocking - Load cached profile instantly
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('boost_manager_profile');
+        if (cached) {
+          setProfile(JSON.parse(cached));
+          setLoading(false); // Unblock the UI instantly for returning users
+        }
+      } catch (e) {
+        console.error('Failed to parse cached profile', e);
+      }
+    }
+
     // 1. Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user && session?.access_token) {
+        // If we don't have a cached profile, we wait. If we do, this runs silently.
         fetchProfile(session.user.id, session.access_token);
       } else {
         setLoading(false);
       }
     });
 
+    let channel: any = null;
+
     // 2. Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -91,14 +109,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchProfile(session.user.id, session.access_token);
         
         // Real-time updates on profile table (e.g. balance, role)
-        const channel = supabase
-          .channel(`profile_changes_${Date.now()}`)
+        if (channel) supabase.removeChannel(channel);
+        
+        channel = supabase
+          .channel('profile_changes_' + session.user.id)
           .on(
             'postgres_changes',
-            { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${session.user.id}` },
+            { event: 'UPDATE', schema: 'public', table: 'profiles', filter: 'id=eq.' + session.user.id },
             (payload) => {
               const data = payload.new as any;
-              setProfile({
+              const updatedProfile: UserProfile = {
                 uid: data.id,
                 id: data.id,
                 email: data.email,
@@ -107,26 +127,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 username: data.username,
                 profilePic: data.profile_pic || undefined,
                 whatsapp: data.whatsapp || undefined,
-              });
+              };
+              setProfile(updatedProfile);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('boost_manager_profile', JSON.stringify(updatedProfile));
+              }
             }
           )
           .subscribe();
-          
-        return () => {
-          supabase.removeChannel(channel);
-        };
-      } else {
+      } else if (event === 'SIGNED_OUT') {
         setProfile(null);
         setLoading(false);
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('boost_manager_profile');
+        }
       }
     });
 
     return () => {
       subscription.unsubscribe();
+      if (channel) supabase.removeChannel(channel);
     };
   }, []);
 
   const signOut = async () => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('boost_manager_profile');
+    }
     await supabase.auth.signOut();
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
@@ -147,3 +174,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+
