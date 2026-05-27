@@ -17,7 +17,13 @@ export const useDashboardData = (
   const [totalCount, setTotalCount] = useState(0);
 
   const fetchData = async () => {
-    if (!user || !profile || !profile.role) return;
+    if (!user || !profile) {
+      setLoading(false);
+      return;
+    }
+    
+    // Ensure role exists
+    const currentRole = profile.role || 'User';
     
     try {
       setLoading(true);
@@ -96,7 +102,13 @@ export const useDashboardData = (
   };
 
   useEffect(() => {
-    if (!user || !profile || !profile.role) return;
+    if (!user || !profile) return;
+    
+    // If role is missing, fallback to User to prevent infinite loading
+    if (!profile.role) {
+      console.warn('Profile role is missing, defaulting to User');
+      profile.role = 'User'; 
+    }
     
     fetchData();
 
