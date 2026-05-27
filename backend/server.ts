@@ -285,11 +285,12 @@ app.get('/api/settings/app', async (req, res) => {
       .from('app_settings')
       .select('*')
       .eq('id', 'global')
-      .single();
+      .maybeSingle();
     if (error) throw error;
 
-    globalSettingsCache = { data, expiresAt: now + CACHE_TTL_MS };
-    res.json({ data });
+    const finalData = data || { exchange_rate: 135 };
+    globalSettingsCache = { data: finalData, expiresAt: now + CACHE_TTL_MS };
+    res.json({ data: finalData });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
