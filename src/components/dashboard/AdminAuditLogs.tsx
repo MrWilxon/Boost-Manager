@@ -87,7 +87,7 @@ export const AdminAuditLogs = () => {
 
       {/* List */}
       <div className="nm-flat rounded-3xl overflow-hidden border border-white/5">
-        <div className="overflow-x-auto table-scrollbar">
+        <div className="hidden md:block overflow-x-auto table-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/5">
@@ -152,6 +152,52 @@ export const AdminAuditLogs = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View */}
+        <div className="md:hidden flex flex-col p-4 gap-4">
+          {loading ? (
+            <div className="py-8 text-center text-muted">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-5 h-5 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+                Loading logs...
+              </div>
+            </div>
+          ) : filteredLogs.length === 0 ? (
+            <div className="py-12 text-center text-muted font-bold">
+              No activity logs found.
+            </div>
+          ) : (
+            filteredLogs.map((log) => (
+              <div key={log.id} className="nm-flat bg-surface rounded-2xl p-5 flex flex-col gap-3 border border-white/5">
+                <div className="flex justify-between items-start">
+                  <div className="font-bold text-main">
+                    {log.action}
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-muted whitespace-nowrap">
+                    <Clock size={12} />
+                    {formatDistanceToNow(new Date(log.created_at))}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-white/5 mt-1">
+                  <div className="w-6 h-6 rounded-full bg-indigo-500/10 flex items-center justify-center text-indigo-500 shrink-0">
+                    <User size={12} />
+                  </div>
+                  <div className="text-sm">
+                    <div className="font-bold text-main leading-tight">{log.performer?.username || 'System'}</div>
+                    <div className="text-[10px] text-muted">{log.performer?.email}</div>
+                  </div>
+                </div>
+
+                {Object.keys(log.details || {}).length > 0 && (
+                  <div className="mt-2 text-[10px] font-mono text-muted bg-white/5 p-2 rounded-lg border border-white/5 break-all max-h-32 overflow-y-auto">
+                    {JSON.stringify(log.details)}
+                  </div>
+                )}
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

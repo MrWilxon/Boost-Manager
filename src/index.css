@@ -221,11 +221,11 @@
 
 /* ─── Neumorphic Tab Pill Switchers ─── */
 .tab-pill-wrapper {
-  @apply flex gap-1 nm-inset rounded-2xl p-1.5;
+  @apply flex gap-1 nm-inset rounded-2xl p-1.5 w-max;
 }
 
 .tab-pill {
-  @apply px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all text-zinc-500 hover:text-zinc-300 cursor-pointer;
+  @apply px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all text-zinc-500 hover:text-zinc-300 cursor-pointer shrink-0;
 }
 
 .tab-pill.active {

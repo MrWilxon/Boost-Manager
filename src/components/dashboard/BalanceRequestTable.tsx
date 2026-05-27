@@ -69,7 +69,7 @@ export const BalanceRequestTable: React.FC<BalanceRequestTableProps> = ({
         </div>
       </div>
 
-      <div className="overflow-x-auto table-scrollbar">
+      <div className="hidden md:block overflow-x-auto table-scrollbar">
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-[#161719] border-b border-black/30 text-[10px] font-black uppercase tracking-widest text-muted">
             <tr>
@@ -157,6 +157,76 @@ export const BalanceRequestTable: React.FC<BalanceRequestTableProps> = ({
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="md:hidden flex flex-col p-4 gap-4">
+        {filtered.map((req) => (
+          <div key={req.id} className="nm-flat bg-surface rounded-2xl p-5 flex flex-col gap-3 border border-white/5">
+            <div className="flex justify-between items-start">
+              <div className="flex flex-col">
+                <span className="font-bold text-main text-sm">{req.username}</span>
+                {profile?.role === 'Admin' && <span className="text-[10px] text-muted font-mono">{req.userId?.slice(0, 8)}</span>}
+              </div>
+              <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest nm-inset ${
+                req.status === 'Pending' ? 'text-amber-500 border border-amber-500/20' :
+                req.status === 'Approved' ? 'text-emerald-500 border border-emerald-500/20' :
+                'text-rose-500 border border-rose-500/20'
+              }`}>
+                {req.status}
+              </span>
+            </div>
+            
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-muted font-bold">{new Date(req.timestamp || Date.now()).toLocaleDateString()}</span>
+              <span className="text-emerald-400 font-black tracking-wide drop-shadow-[0_0_5px_rgba(16,185,129,0.2)] text-sm">
+                रू{req.amount?.toLocaleString()}
+              </span>
+            </div>
+
+            <div className="mt-2 flex items-center justify-end gap-3 pt-3 border-t border-white/5">
+              {req.status === 'Approved' && onGenerateInvoice && (
+                <button 
+                  onClick={() => onGenerateInvoice(req)} 
+                  className="w-10 h-10 rounded-xl nm-flat text-emerald-400 flex items-center justify-center border border-white/5 active:scale-95" 
+                >
+                  <Download size={16} />
+                </button>
+              )}
+              {profile?.role === 'Admin' && req.status === "Pending" && (
+                <>
+                  {onApprove && (
+                    <button 
+                      onClick={() => onApprove(req.id)} 
+                      className="w-10 h-10 rounded-xl nm-flat text-emerald-400 flex items-center justify-center border border-white/5 active:scale-95"
+                    >
+                      <CheckCircle2 size={16} />
+                    </button>
+                  )}
+                  {onReject && (
+                    <button 
+                      onClick={() => onReject(req.id)} 
+                      className="w-10 h-10 rounded-xl nm-flat text-rose-400 flex items-center justify-center border border-white/5 active:scale-95"
+                    >
+                      <XCircle size={16} />
+                    </button>
+                  )}
+                </>
+              )}
+              {profile?.role === 'Admin' && onDelete && (
+                <button 
+                  onClick={() => onDelete(req.id)} 
+                  className="w-10 h-10 rounded-xl nm-flat text-rose-400 flex items-center justify-center border border-white/5 active:scale-95"
+                >
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        ))}
+        {filtered.length === 0 && (
+          <div className="text-center text-muted italic text-sm font-bold py-8">No balance requests found.</div>
+        )}
       </div>
     </section>
   );

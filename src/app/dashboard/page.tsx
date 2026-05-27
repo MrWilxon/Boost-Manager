@@ -485,8 +485,8 @@ export default function DashboardPage() {
           <StatCard title="Pending" value={stats.pending} icon={<Clock size={22} />} color="amber" />
         </div>
 
-        {/* Tabs */}
-        <div className="flex justify-start overflow-x-auto table-scrollbar py-2">
+        {/* Desktop Tabs */}
+        <div className="hidden md:flex justify-start py-2">
           <div className="tab-pill-wrapper flex-nowrap">
             {tabs.map((tab) => (
               <button
@@ -498,6 +498,23 @@ export default function DashboardPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Mobile Tabs Design */}
+        <div className="md:hidden grid grid-cols-3 gap-1.5 p-1.5 nm-inset rounded-2xl mb-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`py-3 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-xl transition-all flex flex-col items-center justify-center gap-1 ${
+                activeTab === tab.id 
+                  ? 'nm-flat text-indigo-400 border border-white/5 shadow-[-2px_-2px_6px_rgba(255,255,255,0.03),_2px_2px_6px_rgba(0,0,0,0.4)]' 
+                  : 'text-zinc-500 hover:text-zinc-400'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Tab Content */}

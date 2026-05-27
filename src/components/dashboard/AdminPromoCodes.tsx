@@ -240,7 +240,7 @@ export const AdminPromoCodes = () => {
 
       {/* List */}
       <div className="nm-flat rounded-3xl overflow-hidden border border-white/5">
-        <div className="overflow-x-auto table-scrollbar">
+        <div className="hidden md:block overflow-x-auto table-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-white/5">
@@ -327,6 +327,78 @@ export const AdminPromoCodes = () => {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View */}
+        <div className="md:hidden flex flex-col p-4 gap-4">
+          {loading ? (
+            <div className="py-8 text-center text-muted">
+              <div className="flex items-center justify-center gap-3">
+                <div className="w-5 h-5 rounded-full border-2 border-indigo-500/20 border-t-indigo-500 animate-spin"></div>
+                Loading...
+              </div>
+            </div>
+          ) : promoCodes.length === 0 ? (
+            <div className="py-12 text-center text-muted font-bold">
+              No promo codes found. Create one above!
+            </div>
+          ) : (
+            promoCodes.map((code) => (
+              <div key={code.id} className="nm-flat bg-surface rounded-2xl p-5 flex flex-col gap-3 border border-white/5">
+                <div className="flex justify-between items-start">
+                  <div className="font-mono font-black text-main bg-white/5 px-2 py-1 rounded-md inline-block">
+                    {code.code}
+                  </div>
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border ${
+                    code.is_active 
+                      ? 'text-emerald-500 border-emerald-500/20 nm-inset' 
+                      : 'text-zinc-500 border-zinc-500/20 nm-inset'
+                  }`}>
+                    {code.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between items-center text-sm">
+                  <div className="font-bold text-main">
+                    {code.discount_type === 'percentage' && `${code.value}% OFF`}
+                    {code.discount_type === 'fixed' && `$${code.value} OFF`}
+                    {code.discount_type === 'rate_override' && `Flat Rate: $${code.value}`}
+                  </div>
+                  <div className="font-bold text-main">
+                    {code.usage_count} <span className="text-muted font-normal">/ {code.max_usage || '∞'}</span>
+                  </div>
+                </div>
+
+                {code.max_usage && code.usage_count >= code.max_usage && (
+                  <div className="text-[10px] text-rose-500 font-bold uppercase mt-1">Limit Reached</div>
+                )}
+
+                <div className="mt-2 flex items-center justify-end gap-2 pt-3 border-t border-white/5">
+                  <button
+                    onClick={() => handleToggleActive(code.id, code.is_active)}
+                    className={`text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg transition-all ${
+                      code.is_active ? 'text-amber-500 nm-inset hover:bg-amber-500/10' : 'text-emerald-500 nm-inset hover:bg-emerald-500/10'
+                    }`}
+                  >
+                    {code.is_active ? 'Deactivate' : 'Activate'}
+                  </button>
+                  <button
+                    onClick={() => startEdit(code)}
+                    className="text-xs font-bold uppercase tracking-wider px-3 py-1.5 rounded-lg text-indigo-400 nm-inset hover:bg-indigo-400/10 transition-all"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(code.id)}
+                    className="w-8 h-8 rounded-lg nm-flat hover:nm-concave text-rose-400 flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-[0.95]"
+                    title="Delete Promo Code"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
