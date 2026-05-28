@@ -96,6 +96,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setLoading(false);
       }
+    }).catch((error) => {
+      console.error('Failed to get session:', error);
+      setSession(null);
+      setUser(null);
+      setLoading(false);
     });
 
     let channel: any = null;
