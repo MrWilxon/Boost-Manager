@@ -6,6 +6,7 @@ import { User } from '@supabase/supabase-js';
 export const useDashboardData = (
   user: User | null, 
   profile: UserProfile | null,
+  token: string | null,
   itemsPerPage: number,
   scope: 'personal' | 'all' = 'personal'
 ) => {
@@ -28,19 +29,31 @@ export const useDashboardData = (
     try {
       setLoading(true);
       
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token || '';
-
-      // 1. Fetch Boost Requests with pagination via backend
+      const authToken = token || '';
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-      const reqResponse = await fetch(`${apiUrl}/api/dashboard/boost-requests?page=${currentPage}&limit=${itemsPerPage}&scope=${scope}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+      // Fetch Boost Requests and Balance Requests in parallel
+      const [reqResponse, balResponse] = await Promise.all([
+        fetch(`${apiUrl}/api/dashboard/boost-requests?page=${currentPage}&limit=${itemsPerPage}&scope=${scope}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+          signal: controller.signal
+        }),
+        fetch(`${apiUrl}/api/dashboard/balance-requests?scope=${scope}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` },
+          signal: controller.signal
+        })
+      ]);
+
+      clearTimeout(timeoutId);
+
       if (!reqResponse.ok) throw new Error('Failed to fetch boost requests');
+      if (!balResponse.ok) throw new Error('Failed to fetch balance requests');
       
       const { data: reqData, count } = await reqResponse.json();
+      const { data: balData } = await balResponse.json();
       
       const mappedRequests: BoostRequest[] = (reqData || []).map((item: any) => ({
         id: item.id,
@@ -70,16 +83,6 @@ export const useDashboardData = (
       setRequests(mappedRequests);
       setTotalCount(count || 0);
       setHasMore((count || 0) > currentPage * itemsPerPage);
-
-      // 2. Fetch Balance Requests via backend
-      const balResponse = await fetch(`${apiUrl}/api/dashboard/balance-requests?scope=${scope}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      if (!balResponse.ok) throw new Error('Failed to fetch balance requests');
-      
-      const { data: balData } = await balResponse.json();
       
       const mappedBalanceRequests: BalanceRequest[] = (balData || []).map((item: any) => ({
         id: item.id,

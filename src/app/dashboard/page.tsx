@@ -99,7 +99,7 @@ function DashboardLoader({ isProfileMissing = false }: { isProfileMissing?: bool
 }
 
 export default function DashboardPage() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, session, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [itemsPerPage, setItemsPerPage] = useState(50);
@@ -113,7 +113,7 @@ export default function DashboardPage() {
     setRequests,
     setBalanceRequests,
     refresh
-  } = useDashboardData(user, profile, itemsPerPage, profile?.role === 'Admin' ? 'all' : 'personal');
+  } = useDashboardData(user, profile, session?.access_token || null, itemsPerPage, profile?.role === 'Admin' ? 'all' : 'personal');
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadMoneyModalOpen, setIsLoadMoneyModalOpen] = useState(false);
@@ -148,9 +148,18 @@ export default function DashboardPage() {
     const fetchSettings = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const res = await fetch(`${apiUrl}/api/settings/app`);
-        if (!res.ok) throw new Error('Failed to fetch from backend');
-        const { data } = await res.json();
+        
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+        const response = await fetch(`${apiUrl}/api/settings/app`, {
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+
+        if (!response.ok) throw new Error('Failed to fetch app settings');
+        const { data } = await response.json();
         
         if (data) {
           if (data.exchange_rate) setRate(Number(data.exchange_rate));
