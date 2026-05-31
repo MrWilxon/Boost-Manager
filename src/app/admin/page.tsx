@@ -20,7 +20,7 @@ import { generateBoostInvoice, generateTopupInvoice } from '@/src/utils/pdfGener
 import AdminLoading from './loading';
 
 export default function AdminPage() {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, session, loading: authLoading } = useAuth();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'users' | 'boosts' | 'topups' | 'promos' | 'announcements' | 'audit' | 'config'>('users');
   
@@ -30,7 +30,7 @@ export default function AdminPage() {
     loading: dataLoading,
     setRequests,
     setBalanceRequests
-  } = useDashboardData(user, profile, 100, 'all');
+  } = useDashboardData(user, profile, session?.access_token || null, 100, 'all');
 
   // Redirect if not admin
   React.useEffect(() => {
