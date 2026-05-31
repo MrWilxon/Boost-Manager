@@ -201,6 +201,63 @@ app.get('/api/dashboard/boost-requests', authMiddleware, async (req, res) => {
   }
 });
 
+// Secure endpoint for creating/updating a boost request
+app.post('/api/dashboard/create-boost-request', authMiddleware, async (req, res) => {
+  try {
+    const { requestData, editingRequestId, diffAmount } = req.body;
+    const reqUser = (req as any).user;
+
+    // Verify user ID matches
+    if (requestData.user_id !== reqUser.id && reqUser.role !== 'Admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    // 1. Check current balance
+    const { data: profile, error: profileErr } = await supabaseAdmin
+      .from('profiles')
+      .select('balance')
+      .eq('id', requestData.user_id)
+      .single();
+
+    if (profileErr) throw profileErr;
+    
+    // Amount to deduct (diffAmount for updates, totalNpr for new)
+    const amountToDeduct = editingRequestId ? diffAmount : requestData.amount_npr;
+
+    if (amountToDeduct > 0 && profile.balance < amountToDeduct) {
+      return res.status(400).json({ error: `Insufficient balance. You need रू${amountToDeduct} but only have रू${profile.balance}.` });
+    }
+
+    // 2. Perform the database operation
+    if (editingRequestId) {
+      const { error: updateErr } = await supabaseAdmin
+        .from('boost_requests')
+        .update(requestData)
+        .eq('id', editingRequestId);
+        
+      if (updateErr) throw updateErr;
+      
+      // Deduct diff
+      if (amountToDeduct !== 0) {
+        await supabaseAdmin.rpc('increment_balance', { user_id: requestData.user_id, amount: -amountToDeduct });
+      }
+    } else {
+      const { error: insertErr } = await supabaseAdmin
+        .from('boost_requests')
+        .insert(requestData);
+        
+      if (insertErr) throw insertErr;
+      
+      // Deduct full amount securely
+      await supabaseAdmin.rpc('increment_balance', { user_id: requestData.user_id, amount: -amountToDeduct });
+    }
+
+    res.json({ success: true });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Proxy for Balance Requests
 app.get('/api/dashboard/balance-requests', authMiddleware, async (req, res) => {
   try {

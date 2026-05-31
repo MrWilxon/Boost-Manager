@@ -7,6 +7,7 @@ import {
 import { supabase } from '../../services/supabase';
 import { UserProfile } from '../../types';
 import { useBoostEligibility } from '../../hooks/useBoostEligibility';
+import { useAuth } from '@/src/context/AuthContext';
 
 interface BoostRequestModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const [modalBudget, setModalBudget] = useState(5);
   const [modalDuration, setModalDuration] = useState(5);
   const [modalNotes, setModalNotes] = useState("");
+  const [promoSuccess, setPromoSuccess] = useState(false);
 
   const [campaignTypes, setCampaignTypes] = useState<string[]>(["Get Message", "Engagement", "Website Traffic", "Page Likes"]);
 
@@ -59,6 +61,8 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showPromoInput, setShowPromoInput] = useState(false);
   const [showTextFormat, setShowTextFormat] = useState(false);
+
+  const { refreshProfile } = useAuth();
 
   const eligibility = useBoostEligibility({
     modalBudget,
@@ -198,39 +202,36 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
     };
 
     try {
+      let diff = 0;
       if (editingRequestId) {
-        // Calculate difference for editing
         const oldRequest = requests.find(r => r.id === editingRequestId);
         const oldAmount = oldRequest ? (oldRequest.amountNpr || 0) : 0;
-        const diff = eligibility.totalNpr - oldAmount;
-        
-        // Ensure user has enough balance for the difference
-        if (diff > 0 && (profile?.balance || 0) < diff) {
-          setError(`Insufficient balance to cover the difference of रू${diff}.`);
-          setIsSubmitting(false);
-          return;
-        }
-
-        const { error: updateErr } = await supabase
-          .from('boost_requests')
-          .update(requestData)
-          .eq('id', editingRequestId);
-        if (updateErr) throw updateErr;
-
-        if (diff !== 0) {
-          await supabase.rpc('increment_balance', { user_id: requestData.user_id, amount: -diff });
-        }
-        onSuccess("Request updated successfully!");
-      } else {
-        const { error: insertErr } = await supabase
-          .from('boost_requests')
-          .insert(requestData);
-        if (insertErr) throw insertErr;
-        
-        // Deduct balance immediately
-        await supabase.rpc('increment_balance', { user_id: requestData.user_id, amount: -eligibility.totalNpr });
-        onSuccess("Boost request submitted!");
+        diff = eligibility.totalNpr - oldAmount;
       }
+
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+      const { data: { session } } = await supabase.auth.getSession();
+        
+        const response = await fetch(`${apiUrl}/api/dashboard/create-boost-request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token}`
+          },
+          body: JSON.stringify({
+            requestData,
+            editingRequestId,
+            diffAmount: editingRequestId ? diff : 0
+          })
+        });
+
+        if (!response.ok) {
+          const errData = await response.json();
+          throw new Error(errData.error || 'Failed to submit request');
+        }
+
+        await refreshProfile();
+        onSuccess(editingRequestId ? "Request updated successfully!" : "Boost request submitted!");
 
       // Save custom location if entered
       if (isCustomLocation && customLocation.trim() !== "") {
