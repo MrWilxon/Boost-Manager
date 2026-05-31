@@ -505,7 +505,7 @@ export const AdminSystemConfig: React.FC = () => {
               <DollarSign size={14} className="text-amber-400" /> Custom Platform Rates
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-              {Array.from(new Set(allPlatforms)).map(platform => (
+              {Array.from(new Set(allowedPlatforms)).map(platform => (
                 <div key={platform} className="nm-flat p-4 rounded-xl flex flex-col gap-2">
                   <span className="text-xs font-bold text-zinc-300">{platform}</span>
                   <div className="relative">
