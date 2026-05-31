@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useRouter } from 'next/navigation';
 import {
   Plus,
@@ -254,9 +254,9 @@ export default function DashboardPage() {
     }
   }, [notification]);
 
-  const showNotification = (msg: string) => setNotification(msg);
+  const showNotification = useCallback((msg: string) => setNotification(msg), []);
 
-  const handleUpdateStatus = async (id: string, status: RequestStatus) => {
+  const handleUpdateStatus = useCallback(async (id: string, status: RequestStatus) => {
     const req = requests.find((r) => r.id === id);
     if (!req) return;
 
@@ -294,13 +294,13 @@ export default function DashboardPage() {
       setRequests(previousRequests);
       alert(error.message || "Failed to update status.");
     }
-  };
+  }, [requests, refresh, showNotification]);
 
-  const handleDeleteRequest = (req: any) => {
+  const handleDeleteRequest = useCallback((req: any) => {
     setDeleteConfirm({ isOpen: true, type: "request", data: req });
-  };
+  }, []);
 
-  const handlePerformDelete = async () => {
+  const handlePerformDelete = useCallback(async () => {
     const { type, data } = deleteConfirm;
     try {
       if (type === "request" && data) {
@@ -331,9 +331,9 @@ export default function DashboardPage() {
     } finally {
       setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
     }
-  };
+  }, [deleteConfirm, refresh, refreshProfile, showNotification]);
 
-  const handleApproveBalance = async (requestId: string) => {
+  const handleApproveBalance = useCallback(async (requestId: string) => {
     const request = balanceRequests.find((r) => r.id === requestId);
     if (!request) return;
 
@@ -352,9 +352,9 @@ export default function DashboardPage() {
     } catch (error: any) {
       alert(error.message || "Failed to approve top-up.");
     }
-  };
+  }, [balanceRequests, refresh, showNotification]);
 
-  const handleRejectBalance = async (requestId: string) => {
+  const handleRejectBalance = useCallback(async (requestId: string) => {
     try {
       const { error } = await supabase.from('balance_requests').update({ status: "Rejected" }).eq('id', requestId);
       if (error) throw error;
@@ -363,7 +363,7 @@ export default function DashboardPage() {
     } catch (error: any) {
       alert(error.message || "Failed to reject request.");
     }
-  };
+  }, [refresh, showNotification]);
 
   const stats = useMemo(() => ({
     total: requests.length,

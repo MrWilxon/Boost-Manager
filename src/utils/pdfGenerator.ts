@@ -1,4 +1,3 @@
-import jsPDF from 'jspdf';
 import { BoostRequest, BalanceRequest } from '@/src/types';
 
 // Brand colors
@@ -11,11 +10,12 @@ const PENDING: [number, number, number] = [245, 158, 11];
 const REJECTED: [number, number, number] = [244, 63, 94];
 
 // Helper to draw rounded rect
-const drawRoundedBox = (doc: jsPDF, x: number, y: number, w: number, h: number, r: number, style: string) => {
+const drawRoundedBox = (doc: any, x: number, y: number, w: number, h: number, r: number, style: string) => {
   doc.roundedRect(x, y, w, h, r, r, style);
 };
 
-export const generateBoostInvoice = (request: BoostRequest) => {
+export const generateBoostInvoice = async (request: BoostRequest) => {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF();
   const date = new Date(request.createdAt || request.date || Date.now()).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric'
@@ -140,7 +140,8 @@ export const generateBoostInvoice = (request: BoostRequest) => {
   doc.save(`${invoiceId}.pdf`);
 };
 
-export const generateTopupInvoice = (request: BalanceRequest) => {
+export const generateTopupInvoice = async (request: BalanceRequest) => {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF();
   const date = new Date(request.date || request.timestamp || Date.now()).toLocaleDateString('en-US', {
     year: 'numeric', month: 'long', day: 'numeric'

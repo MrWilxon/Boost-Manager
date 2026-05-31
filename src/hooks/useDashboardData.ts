@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../services/supabase';
 import { BoostRequest, BalanceRequest, UserProfile } from '../types';
 import { User } from '@supabase/supabase-js';
@@ -17,9 +17,16 @@ export const useDashboardData = (
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
 
+  const isFetchingRef = useRef(false);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const fetchData = async () => {
     if (!user || !profile) {
       setLoading(false);
+      return;
+    }
+
+    if (isFetchingRef.current) {
       return;
     }
     
@@ -27,6 +34,7 @@ export const useDashboardData = (
     const currentRole = profile.role || 'User';
     
     try {
+      isFetchingRef.current = true;
       setLoading(true);
       
       const authToken = token || '';
@@ -101,7 +109,17 @@ export const useDashboardData = (
       console.error("Error fetching dashboard data:", error);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
+  };
+
+  const debouncedFetchData = () => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    debounceTimeoutRef.current = setTimeout(() => {
+      fetchData();
+    }, 400); // 400ms debounce to bundle rapid triggers
   };
 
   useEffect(() => {
@@ -113,6 +131,7 @@ export const useDashboardData = (
       profile.role = 'User'; 
     }
     
+    // Initial fetch should be immediate
     fetchData();
 
     // Setup realtime subscription to auto refresh on any database changes
@@ -122,20 +141,23 @@ export const useDashboardData = (
         'postgres_changes',
         { event: '*', schema: 'public', table: 'boost_requests' },
         () => {
-          fetchData();
+          debouncedFetchData();
         }
       )
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'balance_requests' },
         () => {
-          fetchData();
+          debouncedFetchData();
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
     };
   }, [user?.id, profile?.role, currentPage, itemsPerPage]);
 
