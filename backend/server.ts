@@ -326,6 +326,15 @@ app.post('/api/delete-request', authMiddleware, async (req, res) => {
         target_request_id: request.id,
         details: { refundAmount: request.amount_npr }
       });
+
+      // Sync refund log with top up history
+      await supabaseAdmin.from('balance_requests').insert({
+        user_id: request.user_id,
+        username: request.username || 'User',
+        amount: request.amount_npr,
+        status: 'Approved',
+        method: 'Refund (Campaign Deleted)'
+      });
     }
 
     // 5. Delete request

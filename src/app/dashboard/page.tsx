@@ -276,6 +276,13 @@ export default function DashboardPage() {
       if (!wasRejected && isRejected && req.amountNpr) {
         // Refund because it was rejected
         await supabase.rpc('increment_balance', { user_id: req.userId, amount: req.amountNpr });
+        await supabase.from('balance_requests').insert({
+          user_id: req.userId,
+          username: req.username || 'User',
+          amount: req.amountNpr,
+          status: 'Approved',
+          method: 'Refund (Campaign Rejected)'
+        });
       } else if (wasRejected && !isRejected && req.amountNpr) {
         // Re-deduct because it is no longer rejected
         await supabase.rpc('increment_balance', { user_id: req.userId, amount: -req.amountNpr });
