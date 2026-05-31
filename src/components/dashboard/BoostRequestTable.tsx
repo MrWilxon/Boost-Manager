@@ -211,7 +211,26 @@ export const BoostRequestTable: React.FC<BoostRequestTableProps> = ({
               >
                 <div className="flex justify-between items-center mb-3">
                   <span className="text-[9px] font-black text-muted uppercase tracking-widest">{req.date}</span>
-                  <StatusBadge status={req.status} />
+                  {profile?.role === "Admin" ? (
+                    <div className="relative inline-block">
+                      <select
+                        className={`appearance-none pl-3.5 pr-8 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all cursor-pointer outline-none nm-inset border-black/25 ${
+                          req.status === "Approved" ? "text-emerald-400" :
+                          req.status === "Rejected" ? "text-rose-400" :
+                          "text-amber-400"
+                        }`}
+                        value={req.status}
+                        onChange={(e) => onUpdateStatus(req.id, e.target.value as RequestStatus)}
+                      >
+                        <option value="Pending" className="bg-surface">Pending</option>
+                        <option value="Approved" className="bg-surface">Approved</option>
+                        <option value="Rejected" className="bg-surface">Rejected</option>
+                      </select>
+                      <ChevronDown size={10} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-current opacity-60 pointer-events-none" />
+                    </div>
+                  ) : (
+                    <StatusBadge status={req.status} />
+                  )}
                 </div>
                 
                 <div className="flex flex-wrap gap-1.5 mb-3">
