@@ -267,21 +267,17 @@ export default function DashboardPage() {
       const { error } = await supabase.from('boost_requests').update({ status }).eq('id', id);
       if (error) throw error;
 
-      // Deduct balance when Approving
-      if (status === 'Approved' && req.status !== 'Approved' && req.amountNpr) {
-        await supabase.rpc('increment_balance', { user_id: req.userId, amount: -req.amountNpr });
-      }
-      // Undo deduction if un-approving
-      if (req.status === 'Approved' && status !== 'Approved' && req.amountNpr) {
-        await supabase.rpc('increment_balance', { user_id: req.userId, amount: req.amountNpr });
-      }
+      // Since balance is now deducted at creation (Pending), we only need to handle Refunds on Rejection
+      // and re-deductions if a Rejected request is un-rejected (changed back to Pending or Approved).
       
-      // Handle balance refund when rejecting
-      if (status === 'Rejected' && req.status !== 'Rejected' && req.amountNpr) {
+      const wasRejected = req.status === 'Rejected';
+      const isRejected = status === 'Rejected';
+
+      if (!wasRejected && isRejected && req.amountNpr) {
+        // Refund because it was rejected
         await supabase.rpc('increment_balance', { user_id: req.userId, amount: req.amountNpr });
-      }
-      // Undo refund if un-rejecting
-      if (req.status === 'Rejected' && status !== 'Rejected' && req.amountNpr) {
+      } else if (wasRejected && !isRejected && req.amountNpr) {
+        // Re-deduct because it is no longer rejected
         await supabase.rpc('increment_balance', { user_id: req.userId, amount: -req.amountNpr });
       }
 

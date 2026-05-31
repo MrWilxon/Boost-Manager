@@ -199,11 +199,27 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
 
     try {
       if (editingRequestId) {
+        // Calculate difference for editing
+        const oldRequest = requests.find(r => r.id === editingRequestId);
+        const oldAmount = oldRequest ? (oldRequest.amountNpr || 0) : 0;
+        const diff = eligibility.totalNpr - oldAmount;
+        
+        // Ensure user has enough balance for the difference
+        if (diff > 0 && (profile?.balance || 0) < diff) {
+          setError(`Insufficient balance to cover the difference of रू${diff}.`);
+          setIsSubmitting(false);
+          return;
+        }
+
         const { error: updateErr } = await supabase
           .from('boost_requests')
           .update(requestData)
           .eq('id', editingRequestId);
         if (updateErr) throw updateErr;
+
+        if (diff !== 0) {
+          await supabase.rpc('increment_balance', { user_id: requestData.user_id, amount: -diff });
+        }
         onSuccess("Request updated successfully!");
       } else {
         const { error: insertErr } = await supabase
@@ -211,6 +227,8 @@ export const BoostRequestModal: React.FC<BoostRequestModalProps> = ({
           .insert(requestData);
         if (insertErr) throw insertErr;
         
+        // Deduct balance immediately
+        await supabase.rpc('increment_balance', { user_id: requestData.user_id, amount: -eligibility.totalNpr });
         onSuccess("Boost request submitted!");
       }
 
