@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Settings, DollarSign, Layers, Plus, Trash2, CheckCircle,
   XCircle, Save, RefreshCw, AlertCircle, ToggleLeft, ToggleRight,
-  MessageCircle, Zap, Edit2, Facebook
+  MessageCircle, Zap, Edit2, Facebook, CheckSquare, Square
 } from 'lucide-react';
 import { supabase } from '../../services/supabase';
 import { ALL_PLATFORMS } from '../../constants';
@@ -569,12 +569,13 @@ export const AdminSystemConfig: React.FC = () => {
                   setAllowedPlatforms([...allPlatforms]);
                 }
               }}
-              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer active:scale-[0.96] ${
+              className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer active:scale-[0.96] flex items-center gap-2 ${
                 allowedPlatforms.length === allPlatforms.length
                   ? 'nm-flat text-indigo-400 border border-indigo-500/20'
                   : 'nm-inset text-zinc-500 border border-black/20 hover:text-zinc-400'
               }`}
             >
+              {allowedPlatforms.length === allPlatforms.length ? <CheckSquare size={14} /> : <Square size={14} />}
               Select All
             </button>
             {Array.from(new Set(allPlatforms)).map(p => {
@@ -588,12 +589,13 @@ export const AdminSystemConfig: React.FC = () => {
                       : [...allowedPlatforms, p];
                     setAllowedPlatforms(next);
                   }}
-                  className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer active:scale-[0.96] ${
+                  className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all cursor-pointer active:scale-[0.96] flex items-center gap-2 ${
                     isActive
                       ? 'nm-flat text-indigo-400 border border-indigo-500/20'
                       : 'nm-inset text-zinc-500 border border-black/20 hover:text-zinc-400'
                   }`}
                 >
+                  {isActive ? <CheckSquare size={14} /> : <Square size={14} />}
                   {p}
                 </button>
               );
