@@ -99,7 +99,7 @@ function DashboardLoader({ isProfileMissing = false }: { isProfileMissing?: bool
 }
 
 export default function DashboardPage() {
-  const { user, profile, session, loading: authLoading } = useAuth();
+  const { user, profile, session, loading: authLoading, refreshProfile } = useAuth();
   const router = useRouter();
 
   const [itemsPerPage, setItemsPerPage] = useState(50);
@@ -317,6 +317,7 @@ export default function DashboardPage() {
         
         showNotification("Campaign deleted successfully.");
         refresh();
+        await refreshProfile();
       }
     } catch (error: any) {
       alert(error.message || "Deletion failed.");

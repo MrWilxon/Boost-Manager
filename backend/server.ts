@@ -315,7 +315,20 @@ app.post('/api/delete-request', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Permission denied' });
     }
 
-    // 4. Delete request (Refund and audit log are handled automatically by the DB trigger on_boost_request_deleted)
+    // 4. Manually process refund if the request is Pending
+    if (request.status === 'Pending' && request.amount_npr > 0) {
+      await supabaseAdmin.rpc('increment_balance', { user_id: request.user_id, amount: request.amount_npr });
+      
+      // Add audit log for refund
+      await supabaseAdmin.from('audit_logs').insert({
+        action: 'delete_request_refund',
+        performed_by: reqUser.id,
+        target_request_id: request.id,
+        details: { refundAmount: request.amount_npr }
+      });
+    }
+
+    // 5. Delete request
     const { error: deleteError } = await supabaseAdmin
       .from('boost_requests')
       .delete()
